@@ -1082,18 +1082,22 @@ input:focus, select:focus, textarea:focus {
 /* Ad Container Styles */
 .ad-container {
     margin: 30px 0;
-    padding: 15px;
-    background-color: #1e1e1e;
+    padding: 0;
+    background-color: transparent;
     border-radius: 8px;
     text-align: center;
     position: relative;
     overflow: hidden;
-    min-height: 100px;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: none;
+}
+
+.ad-container:empty {
+    display: none;
 }
 
 .ad-label {
@@ -1107,14 +1111,14 @@ input:focus, select:focus, textarea:focus {
 }
 
 .footer-ad {
-    margin-top: 40px;
-    margin-bottom: 10px;
+    margin-top: 20px;
+    margin-bottom: 0;
 }
 
 /* Ensure ads don't break mobile layout */
 @media (max-width: 768px) {
     .ad-container {
-        margin: 20px 0;
-        padding: 10px;
+        margin: 10px 0;
+        padding: 0;
     }
 } 
