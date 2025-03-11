@@ -124,7 +124,7 @@ function loadWorkouts() {
         const storedWorkouts = localStorage.getItem('workouts');
         workouts = storedWorkouts ? JSON.parse(storedWorkouts) : [];
         
-        // Add some default workouts if none exist
+        // Add one default workout if none exist
         if (workouts.length === 0) {
             workouts = [
                 {
@@ -141,33 +141,6 @@ function loadWorkouts() {
                         title: "30-Minute HIIT Cardio Workout",
                         thumbnail: "https://img.youtube.com/vi/ml6cT4AZdqI/hqdefault.jpg"
                     }
-                },
-                {
-                    id: 2,
-                    title: "Full Body Strength",
-                    description: "Complete full body workout targeting all major muscle groups.",
-                    duration: "45 min",
-                    difficulty: "Advanced",
-                    icon: "fitness_center",
-                    isFavorite: true
-                },
-                {
-                    id: 3,
-                    title: "Yoga for Beginners",
-                    description: "Gentle yoga flow perfect for beginners to improve flexibility and reduce stress.",
-                    duration: "20 min",
-                    difficulty: "Beginner",
-                    icon: "self_improvement",
-                    isFavorite: false
-                },
-                {
-                    id: 4,
-                    title: "Core Crusher",
-                    description: "Intense core workout to strengthen your abs and improve stability.",
-                    duration: "15 min",
-                    difficulty: "Intermediate",
-                    icon: "fitness_center",
-                    isFavorite: false
                 }
             ];
             saveWorkouts();
@@ -919,28 +892,29 @@ function startWorkout(workoutId) {
     // Expand the workout view
     expandWorkout(workoutId);
     
-    // In a real app, you would start a timer, show exercise details, etc.
-    // For now, we'll just log the workout after a delay
-    setTimeout(() => {
-        // Log the completed workout
-        const now = new Date();
-        const logEntry = {
-            id: Date.now(),
-            workout: workout,
-            date: now.toISOString(),
-            duration: workout.duration,
-            calories: Math.floor(Math.random() * 300) + 100
-        };
-        
-        workoutLogs.unshift(logEntry); // Add to beginning of array
-        saveWorkoutLogs();
-        
-        // Update UI
-        renderWorkoutLog();
-        
-        console.log("Workout logged successfully");
-        alert("Workout completed and logged!");
-    }, 2000);
+    // Log the workout immediately
+    logWorkoutCompletion(workout);
+}
+
+// Log workout completion
+function logWorkoutCompletion(workout) {
+    // Log the completed workout
+    const now = new Date();
+    const logEntry = {
+        id: Date.now(),
+        workout: workout,
+        date: now.toISOString(),
+        duration: workout.duration,
+        calories: Math.floor(Math.random() * 300) + 100
+    };
+    
+    workoutLogs.unshift(logEntry); // Add to beginning of array
+    saveWorkoutLogs();
+    
+    // Update UI
+    renderWorkoutLog();
+    
+    console.log("Workout logged successfully");
 }
 
 // Show schedule dialog
@@ -1038,19 +1012,18 @@ function scheduleWorkout(workoutId, scheduleData) {
 function deleteScheduledWorkout(scheduledId) {
     console.log(`Deleting scheduled workout ID: ${scheduledId}`);
     
-    if (confirm("Are you sure you want to delete this scheduled workout?")) {
-        const index = scheduledWorkouts.findIndex(s => s.id === scheduledId);
-        if (index !== -1) {
-            scheduledWorkouts.splice(index, 1);
-            saveScheduledWorkouts();
-            
-            // Update UI
-            renderScheduledWorkouts();
-            
-            console.log("Scheduled workout deleted successfully");
-        } else {
-            console.error(`Scheduled workout with ID ${scheduledId} not found!`);
-        }
+    // Remove confirmation popup - just delete directly
+    const index = scheduledWorkouts.findIndex(s => s.id === scheduledId);
+    if (index !== -1) {
+        scheduledWorkouts.splice(index, 1);
+        saveScheduledWorkouts();
+        
+        // Update UI
+        renderScheduledWorkouts();
+        
+        console.log("Scheduled workout deleted successfully");
+    } else {
+        console.error(`Scheduled workout with ID ${scheduledId} not found!`);
     }
 }
 
@@ -1098,28 +1071,27 @@ function addWorkout(workoutData) {
 function deleteWorkout(workoutId) {
     console.log(`Deleting workout ID: ${workoutId}`);
     
-    if (confirm("Are you sure you want to delete this workout?")) {
-        const index = workouts.findIndex(w => w.id === workoutId);
-        if (index !== -1) {
-            workouts.splice(index, 1);
-            saveWorkouts();
-            
-            // Also delete any scheduled workouts for this workout
-            const scheduledToDelete = scheduledWorkouts.filter(s => s.workoutId === workoutId);
-            if (scheduledToDelete.length > 0) {
-                scheduledWorkouts = scheduledWorkouts.filter(s => s.workoutId !== workoutId);
-                saveScheduledWorkouts();
-                renderScheduledWorkouts();
-            }
-            
-            // Update UI
-            renderWorkoutCards();
-            calculateMaxScroll();
-            
-            console.log("Workout deleted successfully");
-        } else {
-            console.error(`Workout with ID ${workoutId} not found!`);
+    // Remove confirmation popup - just delete directly
+    const index = workouts.findIndex(w => w.id === workoutId);
+    if (index !== -1) {
+        workouts.splice(index, 1);
+        saveWorkouts();
+        
+        // Also delete any scheduled workouts for this workout
+        const scheduledToDelete = scheduledWorkouts.filter(s => s.workoutId === workoutId);
+        if (scheduledToDelete.length > 0) {
+            scheduledWorkouts = scheduledWorkouts.filter(s => s.workoutId !== workoutId);
+            saveScheduledWorkouts();
+            renderScheduledWorkouts();
         }
+        
+        // Update UI
+        renderWorkoutCards();
+        calculateMaxScroll();
+        
+        console.log("Workout deleted successfully");
+    } else {
+        console.error(`Workout with ID ${workoutId} not found!`);
     }
 }
 
@@ -1154,12 +1126,18 @@ function expandWorkout(workoutId) {
                     </iframe>
                 </div>
             `;
+            
+            // Log the workout when video is expanded
+            logWorkoutCompletion(workout);
         } else if (workout.video.type === 'file') {
             videoHtml = `
                 <div class="video-player">
                     <video controls src="${workout.video.url}"></video>
                 </div>
             `;
+            
+            // Log the workout when video is expanded
+            logWorkoutCompletion(workout);
         }
     }
     
