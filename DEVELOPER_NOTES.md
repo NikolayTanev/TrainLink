@@ -89,6 +89,37 @@ If a deployment causes data loss:
    - Consider adding a privacy policy page
    - Add a cookie consent banner if targeting EU users (GDPR compliance)
 
+### Legal Requirements
+
+1. **Cookie Consent**:
+   - The site implements a cookie consent banner and settings dialog
+   - User preferences are stored in localStorage under 'cookieConsent'
+   - The cookie-consent.js file handles all cookie consent functionality
+   - Ensure this remains functional when making site updates
+
+2. **Privacy Policy**:
+   - Located at privacy-policy.html
+   - Must be updated if data collection practices change
+   - Contains information about:
+     - Data collection and usage
+     - Cookie usage
+     - Third-party services (Google Analytics, AdSense)
+     - User rights
+
+3. **Terms of Service**:
+   - Located at terms-of-service.html
+   - Contains legal disclaimers and limitations of liability
+   - Outlines acceptable use of the service
+   - Should be reviewed by a legal professional for major updates
+
+4. **Contact Information**:
+   - Both policy pages contain placeholder contact information
+   - Update [Your Contact Email] with a real contact email before public launch
+
+5. **Copyright Notice**:
+   - Footer includes copyright notice: "© 2024 TrainLink. All rights reserved."
+   - Update the year annually
+
 ## Deployment Checklist
 
 Before pushing updates:

@@ -141,6 +141,76 @@
                  (adsbygoogle = window.adsbygoogle || []).push({});
             </script>
         </div>
+        
+        <!-- Legal Footer -->
+        <footer class="legal-footer">
+            <div class="footer-links">
+                <a href="privacy-policy.html">Privacy Policy</a>
+                <a href="terms-of-service.html">Terms of Service</a>
+                <a href="#" id="openCookieSettings">Cookie Settings</a>
+            </div>
+            <div class="copyright">
+                &copy; 2025 TrainLink. All rights reserved.
+            </div>
+        </footer>
+    </div>
+
+    <!-- Cookie Consent Banner -->
+    <div class="cookie-banner" id="cookieBanner">
+        <div class="cookie-content">
+            <p>This website uses cookies to ensure you get the best experience. By using TrainLink, you agree to our use of cookies and analytics.</p>
+            <div class="cookie-buttons">
+                <button id="acceptCookies" class="btn-accept">Accept All</button>
+                <button id="customizeCookies" class="btn-customize">Customize</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cookie Settings Dialog -->
+    <div class="dialog-overlay" id="cookieSettingsOverlay">
+        <div class="dialog-container">
+            <h2 class="dialog-title">Cookie Settings</h2>
+            
+            <div class="dialog-content">
+                <div class="cookie-setting">
+                    <div class="setting-header">
+                        <h3>Essential Cookies</h3>
+                        <label class="toggle disabled">
+                            <input type="checkbox" checked disabled>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <p>Required for the website to function. Cannot be disabled.</p>
+                </div>
+                
+                <div class="cookie-setting">
+                    <div class="setting-header">
+                        <h3>Analytics Cookies</h3>
+                        <label class="toggle">
+                            <input type="checkbox" id="analyticsConsent" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <p>Help us understand how visitors interact with our website.</p>
+                </div>
+                
+                <div class="cookie-setting">
+                    <div class="setting-header">
+                        <h3>Advertising Cookies</h3>
+                        <label class="toggle">
+                            <input type="checkbox" id="advertisingConsent" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <p>Used to show relevant advertising and track ad performance.</p>
+                </div>
+            </div>
+            
+            <div class="dialog-actions">
+                <button class="btn-cancel" id="cancelCookieSettings">Cancel</button>
+                <button class="btn-save" id="saveCookieSettings">Save Preferences</button>
+            </div>
+        </div>
     </div>
 
     <!-- Add Workout Dialog -->
@@ -363,5 +433,6 @@
     <script src="main.js"></script>
     <script src="add-workout-dialog.js"></script>
     <script src="calendar.js"></script>
+    <script src="cookie-consent.js"></script>
 </body>
 </html> 
