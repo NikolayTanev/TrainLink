@@ -1,0 +1,3 @@
+@echo off
+echo Opening TrainLink in your default browser...
+start "" login.html 
