@@ -349,6 +349,7 @@ body {
     background-color: #2a2a2a;
     color: #ff6b6b;
     width: 36px;
+    flex: 0;
 }
 
 .delete-button:hover {
@@ -1412,6 +1413,36 @@ input:checked + .slider:before {
         margin-right: 15px;
     }
     
+    /* Fix for favorite button to prevent squishing */
+    .favorite-button, .expanded-favorite {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transform: none !important;
+        box-sizing: content-box !important;
+    }
+    
+    .favorite-button .material-icons, .expanded-favorite .material-icons {
+        font-size: 20px !important;
+        margin: 0 !important;
+    }
+    
+    /* Ensure proper positioning in expanded view */
+    .expanded-favorite {
+        top: 15px !important;
+        right: 60px !important;
+    }
+    
+    .close-expanded {
+        top: 15px !important;
+        right: 15px !important;
+    }
+    
     .workout-icon, .workout-thumbnail {
         height: 150px;
     }
@@ -1487,6 +1518,7 @@ input:checked + .slider:before {
     .upcoming-workout-card {
         flex-direction: column;
         padding: 12px;
+        position: relative;
     }
     
     .upcoming-workout-date {
@@ -1512,35 +1544,135 @@ input:checked + .slider:before {
     }
     
     .upcoming-workout-actions {
-        position: absolute;
-        top: 10px;
-        right: 10px;
+        display: none !important;
+    }
+    
+    .workout-actions {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+    }
+    
+    .start-button {
+        flex: 1;
+    }
+    
+    .schedule-button {
+        flex: 0.833; /* 5/6 of the remaining space */
+    }
+    
+    .delete-button {
+        flex: 0.167; /* 1/6 of the remaining space */
+        width: 36px;
+        min-width: 36px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Hide unwanted icons in the header */
+    .header .material-icons:not(.logo-icon) {
+        display: none !important;
+    }
+    
+    /* Hide any top-right corner icons that shouldn't be there */
+    .header > button,
+    .header > div:not(.user-profile) > button,
+    .upcoming-workout-actions {
+        display: none !important;
     }
 }
 
 /* Tablet Specific Adjustments */
-@media (min-width: 481px) and (max-width: 768px) {
+@media (min-width: 481px) and (max-width: 1024px) {
+    /* Ensure workout cards display in a row on tablets */
     .workout-card {
         flex: 0 0 calc(50% - 20px);
+        margin-right: 15px;
     }
     
+    /* Keep carousel in horizontal scroll mode but make it more touch-friendly */
     .workout-carousel {
-        overflow-x: auto;
+        overflow-x: visible;
         justify-content: flex-start;
+        margin-bottom: 30px;
     }
     
     .workout-cards-container {
-        overflow: visible;
+        overflow: hidden;
+        margin: 0 10px;
     }
     
     .workout-cards {
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 15px;
+        display: flex;
+        flex-wrap: nowrap;
+        transition: transform 0.5s ease;
     }
     
+    /* Ensure carousel arrows are visible on tablets */
     .carousel-arrow {
-        display: none;
+        display: flex;
+        width: 36px;
+        height: 36px;
+        background-color: rgba(255, 255, 255, 0.15);
+        z-index: 5;
+    }
+    
+    /* Adjust section headers for better spacing */
+    .section-header {
+        margin-bottom: 25px;
+    }
+}
+
+/* iPad Specific Adjustments */
+@media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (orientation: portrait) {
+    /* Ensure workout cards display properly on iPads in portrait mode */
+    .workout-card {
+        flex: 0 0 calc(50% - 20px);
+        margin-right: 15px;
+    }
+    
+    /* Keep carousel in horizontal scroll mode with visible arrows */
+    .workout-carousel {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 30px;
+    }
+    
+    .workout-cards-container {
+        flex: 1;
+        overflow: hidden;
+        margin: 0 10px;
+    }
+    
+    .workout-cards {
+        display: flex;
+        flex-wrap: nowrap;
+        transition: transform 0.5s ease;
+    }
+    
+    /* Ensure carousel arrows are visible and properly sized */
+    .carousel-arrow {
+        display: flex;
+        width: 40px;
+        height: 40px;
+        background-color: rgba(255, 255, 255, 0.15);
+        z-index: 5;
+    }
+    
+    /* Adjust section headers for better spacing */
+    .section-header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+    
+    .section-header h2 {
+        margin-bottom: 0;
     }
 }
 
@@ -1681,5 +1813,43 @@ body.landscape .expanded-workout-container {
 @supports (-webkit-touch-callout: none) {
     .dialog-overlay, .expanded-workout-overlay {
         height: -webkit-fill-available;
+    }
+}
+
+/* iPad Pro Specific Adjustments */
+@media only screen and (min-device-width: 1024px) and (max-device-width: 1366px) and (orientation: portrait) {
+    /* Ensure workout cards display properly on iPad Pro in portrait mode */
+    .workout-card {
+        flex: 0 0 calc(33.33% - 20px);
+        margin-right: 15px;
+    }
+    
+    /* Keep carousel in horizontal scroll mode with visible arrows */
+    .workout-carousel {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 30px;
+    }
+    
+    .workout-cards-container {
+        flex: 1;
+        overflow: hidden;
+        margin: 0 10px;
+    }
+    
+    .workout-cards {
+        display: flex;
+        flex-wrap: nowrap;
+        transition: transform 0.5s ease;
+    }
+    
+    /* Ensure carousel arrows are visible and properly sized */
+    .carousel-arrow {
+        display: flex;
+        width: 40px;
+        height: 40px;
+        background-color: rgba(255, 255, 255, 0.15);
+        z-index: 5;
     }
 } 
