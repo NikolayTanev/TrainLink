@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TrainLink - Workout Tracker</title>
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5BCPY2QYD5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-5BCPY2QYD5');
+    </script>
+    
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Google AdSense Script -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7058331956950995"
+     crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="workouts-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Workouts</h1>
+            <div class="header-actions">
+                <a href="index.html" class="header-link">Home</a>
+            </div>
+        </div>
+
+        <!-- Suggested Workouts Section -->
+        <section class="suggested-workouts">
+            <div class="section-header">
+                <h2>Your Workouts</h2>
+                <button class="add-workout-button" id="openAddWorkoutDialog">
+                    <span class="material-icons">add</span>
+                    Add Workout
+                </button>
+            </div>
+            <div class="workout-carousel">
+                <button class="carousel-arrow prev" id="scrollLeft">
+                    <span class="material-icons">chevron_left</span>
+                </button>
+                
+                <div class="workout-cards-container">
+                    <div class="workout-cards" id="workoutCardsRef">
+                        <!-- Workout cards will be inserted here by JavaScript -->
+                    </div>
+                </div>
+                
+                <button class="carousel-arrow next" id="scrollRight">
+                    <span class="material-icons">chevron_right</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Ad Banner 1 - Between Sections -->
+        <div class="ad-container">
+            <!-- TrainLink Section Ad -->
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-7058331956950995"
+                 data-ad-slot="3563732689"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
+
+        <!-- Workout Calendar Section -->
+        <section class="workout-calendar">
+            <div class="section-header">
+                <h2>Upcoming Workouts</h2>
+                <button class="calendar-toggle-button" id="toggleCalendar">
+                    <span class="material-icons">expand_more</span>
+                    Show Calendar
+                </button>
+            </div>
+            
+            <!-- Upcoming Workouts Preview -->
+            <div class="upcoming-workouts" id="upcomingWorkouts">
+                <!-- Upcoming workout cards will be inserted here by JavaScript -->
+            </div>
+            
+            <!-- Full Calendar View (Initially Hidden) -->
+            <div class="calendar-container" id="calendarContainer">
+                <div class="calendar-header">
+                    <button class="calendar-nav-button" id="prevMonth">
+                        <span class="material-icons">chevron_left</span>
+                    </button>
+                    <h3 id="currentMonthYear">January 2024</h3>
+                    <button class="calendar-nav-button" id="nextMonth">
+                        <span class="material-icons">chevron_right</span>
+                    </button>
+                </div>
+                
+                <div class="calendar-weekdays">
+                    <div>Sun</div>
+                    <div>Mon</div>
+                    <div>Tue</div>
+                    <div>Wed</div>
+                    <div>Thu</div>
+                    <div>Fri</div>
+                    <div>Sat</div>
+                </div>
+                
+                <div class="calendar-days" id="calendarDays">
+                    <!-- Calendar days will be inserted here by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Workout Log Section -->
+        <section class="workout-log">
+            <div class="section-header">
+                <h2>Workout Log</h2>
+                <div class="filter-buttons">
+                    <button data-filter="all" class="date-filter active">All</button>
+                    <button data-filter="week" class="date-filter">This Week</button>
+                    <button data-filter="month" class="date-filter">This Month</button>
+                </div>
+            </div>
+
+            <div class="log-entries" id="logEntries">
+                <!-- Log entries will be inserted here by JavaScript -->
+            </div>
+        </section>
+        
+        <!-- Ad Banner 2 - Footer -->
+        <div class="ad-container footer-ad">
+            <!-- TrainLink Footer Ad -->
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-7058331956950995"
+                 data-ad-slot="8492593914"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
+        
+        <!-- Legal Footer -->
+        <footer class="legal-footer">
+            <div class="footer-links">
+                <a href="privacy-policy.html">Privacy Policy</a>
+                <a href="terms-of-service.html">Terms of Service</a>
+                <a href="#" id="openCookieSettings">Cookie Settings</a>
+            </div>
+            <div class="copyright">
+                &copy; 2025 TrainLink. All rights reserved.
+            </div>
+        </footer>
+    </div>
+
+    <!-- Cookie Consent Banner -->
+    <div class="cookie-banner" id="cookieBanner">
+        <div class="cookie-content">
+            <p>This website uses cookies to ensure you get the best experience. By using TrainLink, you agree to our use of cookies and analytics.</p>
+            <div class="cookie-buttons">
+                <button id="acceptCookies" class="btn-accept">Accept All</button>
+                <button id="customizeCookies" class="btn-customize">Customize</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cookie Settings Dialog -->
+    <div class="dialog-overlay" id="cookieSettingsOverlay">
+        <div class="dialog-container">
+            <h2 class="dialog-title">Cookie Settings</h2>
+            
+            <div class="dialog-content">
+                <div class="cookie-setting">
+                    <div class="setting-header">
+                        <h3>Essential Cookies</h3>
+                        <label class="toggle disabled">
+                            <input type="checkbox" checked disabled>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <p>Required for the website to function. Cannot be disabled.</p>
+                </div>
+                
+                <div class="cookie-setting">
+                    <div class="setting-header">
+                        <h3>Analytics Cookies</h3>
+                        <label class="toggle">
+                            <input type="checkbox" id="analyticsConsent" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <p>Help us understand how visitors interact with our website.</p>
+                </div>
+                
+                <div class="cookie-setting">
+                    <div class="setting-header">
+                        <h3>Advertising Cookies</h3>
+                        <label class="toggle">
+                            <input type="checkbox" id="advertisingConsent" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <p>Used to show relevant advertising and track ad performance.</p>
+                </div>
+            </div>
+            
+            <div class="dialog-actions">
+                <button class="btn-cancel" id="cancelCookieSettings">Cancel</button>
+                <button class="btn-save" id="saveCookieSettings">Save Preferences</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Workout Dialog -->
+    <div class="dialog-overlay" id="dialogOverlay">
+        <div class="dialog-container">
+            <h2 class="dialog-title">Add New Workout</h2>
+            
+            <div class="dialog-content">
+                <form id="workoutForm">
+                    <div class="form-group">
+                        <label for="title">Title<span class="required">*</span></label>
+                        <input type="text" id="title" name="title" placeholder="e.g. HIIT Cardio Workout" required>
+                        <div class="error-message" id="titleError">Title is required</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Description<span class="required">*</span></label>
+                        <textarea id="description" name="description" placeholder="Describe the workout" rows="3" required></textarea>
+                        <div class="error-message" id="descriptionError">Description is required</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="duration">Duration<span class="required">*</span></label>
+                        <input type="text" id="duration" name="duration" placeholder="e.g. 30 min" required>
+                        <div class="error-message" id="durationError">Duration is required</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="difficulty">Difficulty<span class="required">*</span></label>
+                        <select id="difficulty" name="difficulty" required>
+                            <option value="">Select difficulty</option>
+                            <option value="Beginner">Beginner</option>
+                            <option value="Intermediate">Intermediate</option>
+                            <option value="Advanced">Advanced</option>
+                        </select>
+                        <div class="error-message" id="difficultyError">Difficulty is required</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="icon">Icon</label>
+                        <input type="hidden" id="selectedIcon" name="icon" value="fitness_center">
+                        <div class="icon-selector" id="iconSelector">
+                            <!-- Icons will be inserted here by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <hr class="divider">
+                    
+                    <div class="form-group">
+                        <label for="videoUrl">Video URL (Optional)</label>
+                        <input type="url" id="videoUrl" name="videoUrl" placeholder="YouTube video URL">
+                        <div class="error-message" id="videoUrlError">Please enter a valid YouTube URL</div>
+                    </div>
+                    
+                    <div class="video-preview" id="videoPreview" style="display: none;">
+                        <div class="thumbnail-container">
+                            <img id="videoThumbnail" src="" alt="Video thumbnail">
+                            <div class="play-icon">
+                                <span class="material-icons">play_circle</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="videoTitle">Video Title</label>
+                            <input type="text" id="videoTitle" name="videoTitle" placeholder="Video title">
+                        </div>
+                    </div>
+                    
+                    <hr class="divider">
+                    
+                    <div class="form-group">
+                        <div class="schedule-toggle">
+                            <input type="checkbox" id="scheduleWorkout" name="scheduleWorkout">
+                            <label for="scheduleWorkout">Schedule this workout</label>
+                        </div>
+                    </div>
+                    
+                    <div id="scheduleOptions" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="workoutDate">Date<span class="required">*</span></label>
+                                <input type="date" id="workoutDate" name="workoutDate">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="workoutTime">Time<span class="required">*</span></label>
+                                <input type="time" id="workoutTime" name="workoutTime">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="repeatOption">Repeat</label>
+                            <select id="repeatOption" name="repeatOption">
+                                <option value="never">Never</option>
+                                <option value="daily">Every Day</option>
+                                <option value="weekly">Every Week</option>
+                                <option value="biweekly">Every 2 Weeks</option>
+                                <option value="monthly">Every Month</option>
+                                <option value="yearly">Every Year</option>
+                                <option value="custom">Custom...</option>
+                            </select>
+                        </div>
+                        
+                        <div id="customRepeatOptions" style="display: none;">
+                            <div class="form-group">
+                                <label>Repeat on</label>
+                                <div class="weekday-selector">
+                                    <div class="weekday-option">
+                                        <input type="checkbox" id="repeat0" name="repeatDays" value="0">
+                                        <label for="repeat0">S</label>
+                                    </div>
+                                    <div class="weekday-option">
+                                        <input type="checkbox" id="repeat1" name="repeatDays" value="1">
+                                        <label for="repeat1">M</label>
+                                    </div>
+                                    <div class="weekday-option">
+                                        <input type="checkbox" id="repeat2" name="repeatDays" value="2">
+                                        <label for="repeat2">T</label>
+                                    </div>
+                                    <div class="weekday-option">
+                                        <input type="checkbox" id="repeat3" name="repeatDays" value="3">
+                                        <label for="repeat3">W</label>
+                                    </div>
+                                    <div class="weekday-option">
+                                        <input type="checkbox" id="repeat4" name="repeatDays" value="4">
+                                        <label for="repeat4">T</label>
+                                    </div>
+                                    <div class="weekday-option">
+                                        <input type="checkbox" id="repeat5" name="repeatDays" value="5">
+                                        <label for="repeat5">F</label>
+                                    </div>
+                                    <div class="weekday-option">
+                                        <input type="checkbox" id="repeat6" name="repeatDays" value="6">
+                                        <label for="repeat6">S</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="repeatFrequency">Frequency</label>
+                                    <select id="repeatFrequency" name="repeatFrequency">
+                                        <option value="every">Every</option>
+                                        <option value="first">First</option>
+                                        <option value="second">Second</option>
+                                        <option value="third">Third</option>
+                                        <option value="fourth">Fourth</option>
+                                        <option value="last">Last</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="repeatDay">Day</label>
+                                    <select id="repeatDay" name="repeatDay">
+                                        <option value="day">Day</option>
+                                        <option value="sunday">Sunday</option>
+                                        <option value="monday">Monday</option>
+                                        <option value="tuesday">Tuesday</option>
+                                        <option value="wednesday">Wednesday</option>
+                                        <option value="thursday">Thursday</option>
+                                        <option value="friday">Friday</option>
+                                        <option value="saturday">Saturday</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="dialog-actions">
+                <button class="btn-cancel" id="cancelDialog">Cancel</button>
+                <button class="btn-add" id="addWorkout">Add Workout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expanded Workout View -->
+    <div class="expanded-workout-overlay" id="expandedWorkoutOverlay">
+        <div class="expanded-workout-container" id="expandedWorkoutContainer">
+            <!-- Content will be inserted here by JavaScript -->
+        </div>
+    </div>
+    
+    <!-- Delete Workout Options Dialog -->
+    <div class="dialog-overlay" id="deleteWorkoutOptionsDialog">
+        <div class="dialog-container">
+            <div class="dialog-title">Delete Workout</div>
+            <div class="dialog-content">
+                <p>How would you like to delete this workout?</p>
+                <div class="delete-options">
+                    <button id="deleteSingleWorkout" class="delete-option">
+                        <span class="material-icons">event_busy</span>
+                        <div class="delete-option-text">
+                            <h4>Delete this workout only</h4>
+                            <p>Remove only this specific scheduled workout</p>
+                        </div>
+                    </button>
+                    <button id="deleteSeriesWorkout" class="delete-option">
+                        <span class="material-icons">auto_delete</span>
+                        <div class="delete-option-text">
+                            <h4>Delete entire series</h4>
+                            <p>Remove all occurrences of this recurring workout</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+            <div class="dialog-actions">
+                <button class="btn-cancel" id="cancelDeleteWorkout">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reschedule Workout Dialog -->
+    <div class="dialog-overlay" id="rescheduleWorkoutDialog">
+        <div class="dialog-container">
+            <div class="dialog-title">Reschedule Workout</div>
+            <div class="dialog-content">
+                <div class="form-group">
+                    <label for="rescheduleDate">New Date <span class="required">*</span></label>
+                    <input type="date" id="rescheduleDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="rescheduleTime">New Time <span class="required">*</span></label>
+                    <input type="time" id="rescheduleTime" required>
+                </div>
+                <div class="form-group">
+                    <div class="schedule-toggle">
+                        <input type="checkbox" id="adjustSeriesToggle">
+                        <label for="adjustSeriesToggle">Apply this change to all future workouts in this series</label>
+                    </div>
+                    <p class="help-text">If unchecked, only this specific occurrence will be rescheduled.</p>
+                </div>
+            </div>
+            <div class="dialog-actions">
+                <button class="btn-cancel" id="cancelReschedule">Cancel</button>
+                <button class="btn-add" id="confirmReschedule">Reschedule</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Workout Dialog -->
+    <div class="dialog-overlay" id="scheduleWorkoutDialog">
+        <!-- ... existing code ... -->
+    </div>
+
+    <script src="main.js"></script>
+    <script src="add-workout-dialog.js"></script>
+    <script src="calendar.js"></script>
+    <script src="cookie-consent.js"></script>
+    <script src="mobile-enhancements.js"></script>
+</body>
+</html> 
