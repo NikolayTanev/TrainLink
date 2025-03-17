@@ -394,40 +394,66 @@
         </div>
     </div>
     
-    <!-- Reschedule Workout Dialog -->
-    <div class="dialog-overlay" id="rescheduleDialogOverlay">
+    <!-- Delete Workout Options Dialog -->
+    <div class="dialog-overlay" id="deleteWorkoutOptionsDialog">
         <div class="dialog-container">
-            <h2 class="dialog-title">Reschedule Workout</h2>
-            
+            <div class="dialog-title">Delete Workout</div>
             <div class="dialog-content">
-                <form id="rescheduleForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="newWorkoutDate">New Date<span class="required">*</span></label>
-                            <input type="date" id="newWorkoutDate" name="newWorkoutDate" required>
+                <p>How would you like to delete this workout?</p>
+                <div class="delete-options">
+                    <button id="deleteSingleWorkout" class="delete-option">
+                        <span class="material-icons">event_busy</span>
+                        <div class="delete-option-text">
+                            <h4>Delete this workout only</h4>
+                            <p>Remove only this specific scheduled workout</p>
                         </div>
-                        
-                        <div class="form-group">
-                            <label for="newWorkoutTime">New Time<span class="required">*</span></label>
-                            <input type="time" id="newWorkoutTime" name="newWorkoutTime" required>
+                    </button>
+                    <button id="deleteSeriesWorkout" class="delete-option">
+                        <span class="material-icons">auto_delete</span>
+                        <div class="delete-option-text">
+                            <h4>Delete entire series</h4>
+                            <p>Remove all occurrences of this recurring workout</p>
                         </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="adjustFollowing">Adjust Following Workouts</label>
-                        <div class="schedule-toggle">
-                            <input type="checkbox" id="adjustFollowing" name="adjustFollowing" checked>
-                            <label for="adjustFollowing">Shift all following workouts by the same amount</label>
-                        </div>
-                    </div>
-                </form>
+                    </button>
+                </div>
             </div>
-            
+            <div class="dialog-actions">
+                <button class="btn-cancel" id="cancelDeleteWorkout">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reschedule Workout Dialog -->
+    <div class="dialog-overlay" id="rescheduleWorkoutDialog">
+        <div class="dialog-container">
+            <div class="dialog-title">Reschedule Workout</div>
+            <div class="dialog-content">
+                <div class="form-group">
+                    <label for="rescheduleDate">New Date <span class="required">*</span></label>
+                    <input type="date" id="rescheduleDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="rescheduleTime">New Time <span class="required">*</span></label>
+                    <input type="time" id="rescheduleTime" required>
+                </div>
+                <div class="form-group">
+                    <div class="schedule-toggle">
+                        <input type="checkbox" id="adjustSeriesToggle">
+                        <label for="adjustSeriesToggle">Apply this change to all future workouts in this series</label>
+                    </div>
+                    <p class="help-text">If unchecked, only this specific occurrence will be rescheduled.</p>
+                </div>
+            </div>
             <div class="dialog-actions">
                 <button class="btn-cancel" id="cancelReschedule">Cancel</button>
                 <button class="btn-add" id="confirmReschedule">Reschedule</button>
             </div>
         </div>
+    </div>
+
+    <!-- Schedule Workout Dialog -->
+    <div class="dialog-overlay" id="scheduleWorkoutDialog">
+        <!-- ... existing code ... -->
     </div>
 
     <script src="main.js"></script>

@@ -164,29 +164,62 @@ body {
 }
 
 .workout-cards-container {
-    flex: 1;
     overflow: hidden;
+    flex-grow: 1;
+    position: relative;
+    padding: 10px 0;
     margin: 0 10px;
 }
 
 .workout-cards {
     display: flex;
-    transition: transform 0.5s ease;
+    transition: transform 0.3s ease;
+    padding: 10px;
 }
 
 .workout-card {
-    flex: 0 0 350px;
-    margin-right: 25px;
     background-color: #1e1e1e;
     border-radius: 12px;
+    border: 2px solid transparent;
     overflow: hidden;
+    flex: 0 0 350px;
+    margin-right: 25px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     position: relative;
-    transition: all 0.3s;
+    transition: box-shadow 0.3s, border-color 0.3s;
 }
 
 .workout-card:hover {
-    
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Scheduled today highlight */
+.workout-card.scheduled-today {
+    border: 2px solid #4CAF50;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+}
+
+.workout-card.scheduled-today:hover {
+    box-shadow: 0 6px 12px rgba(76, 175, 80, 0.4);
+}
+
+.scheduling-indicator {
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: #4CAF50;
+    font-weight: 500;
+}
+
+.scheduling-indicator .material-icons {
+    font-size: 16px;
+    margin-right: 5px;
+}
+
+.scheduled-today-indicator {
+    font-weight: bold;
+    color: #4CAF50;
 }
 
 .favorite-button {
@@ -251,7 +284,10 @@ body {
 }
 
 .workout-content {
-    padding: 20px;
+    padding: 15px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .workout-content h3 {
@@ -291,14 +327,14 @@ body {
 .video-indicator {
     display: flex;
     align-items: center;
-    color: rgba(255, 255, 255, 0.8);
+    margin-top: 8px;
     font-size: 0.85rem;
-    margin-bottom: 15px;
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .video-indicator .material-icons {
     font-size: 16px;
-    margin-right: 4px;
+    margin-right: 5px;
 }
 
 /* Workout Actions */
@@ -349,7 +385,6 @@ body {
     background-color: #2a2a2a;
     color: #ff6b6b;
     width: 36px;
-    flex: 0;
 }
 
 .delete-button:hover {
@@ -1034,23 +1069,53 @@ input:focus, select:focus, textarea:focus {
 
 .expanded-details {
     padding: 20px;
-}
-
-.expanded-details h2 {
-    margin-bottom: 10px;
     color: #fff;
 }
 
+.expanded-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.expanded-details h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.8rem;
+}
+
 .expanded-details p {
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.finish-workout-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    color: #333;
+    border: none;
+    border-radius: 24px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.finish-workout-button:hover {
+    background-color: #f0f0f0;
+}
+
+.finish-workout-button .material-icons {
+    margin-right: 15px;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .form-row {
         flex-direction: column;
-        gap: 0;
     }
     
     .workout-card {
@@ -1058,15 +1123,15 @@ input:focus, select:focus, textarea:focus {
     }
     
     .upcoming-workout-card {
-        max-width: 100%;
+        flex: 0 0 100%;
     }
     
     .calendar-weekdays, .calendar-days {
-        gap: 2px;
+        grid-template-columns: repeat(7, 1fr);
     }
     
     .calendar-day {
-        min-height: 60px;
+        height: 60px;
     }
     
     .weekday-selector {
@@ -1074,9 +1139,14 @@ input:focus, select:focus, textarea:focus {
         justify-content: center;
     }
     
+    /* Keep workout actions in a row for better mobile experience */
     .workout-actions {
-        flex-direction: column;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
         gap: 5px;
+        margin-top: 10px;
+        width: 100%;
     }
 }
 
@@ -1518,7 +1588,6 @@ input:checked + .slider:before {
     .upcoming-workout-card {
         flex-direction: column;
         padding: 12px;
-        position: relative;
     }
     
     .upcoming-workout-date {
@@ -1531,10 +1600,18 @@ input:checked + .slider:before {
         flex-direction: row;
         justify-content: flex-start;
         gap: 15px;
+        text-align: left;
     }
     
     .upcoming-workout-content {
         padding: 0;
+        width: 100%;
+        text-align: left;
+    }
+    
+    .upcoming-workout-content h3 {
+        text-align: left;
+        width: 100%;
     }
     
     .upcoming-workout-meta {
@@ -1543,44 +1620,65 @@ input:checked + .slider:before {
         gap: 5px;
     }
     
+    .repeat-indicator {
+        text-align: left;
+        justify-content: flex-start;
+    }
+    
     .upcoming-workout-actions {
-        display: none !important;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    
+    .expanded-header {
+        flex-direction: row;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .expanded-details h2 {
+        font-size: 1.4rem;
+        margin-bottom: 0;
+        max-width: 70%;
+    }
+    
+    .finish-workout-button {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .finish-workout-button .material-icons {
+        font-size: 16px;
     }
     
     .workout-actions {
         display: flex;
         flex-direction: row;
-        gap: 8px;
+        justify-content: space-between;
+        margin-top: 10px;
+        width: 100%;
     }
     
-    .start-button {
+    .workout-actions button {
         flex: 1;
+        margin: 0 0.1rem;
+        padding: 8px 1rem;
+        font-size: 0.85rem;
     }
     
-    .schedule-button {
-        flex: 0.833; /* 5/6 of the remaining space */
+    .workout-actions button:first-child {
+        margin-left: 0;
     }
     
-    .delete-button {
-        flex: 0.167; /* 1/6 of the remaining space */
-        width: 36px;
-        min-width: 36px;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .workout-actions button:last-child {
+        margin-right: 0;
     }
     
-    /* Hide unwanted icons in the header */
-    .header .material-icons:not(.logo-icon) {
-        display: none !important;
-    }
-    
-    /* Hide any top-right corner icons that shouldn't be there */
-    .header > button,
-    .header > div:not(.user-profile) > button,
-    .upcoming-workout-actions {
-        display: none !important;
+    .schedule-button .material-icons, 
+    .delete-button .material-icons {
+        margin-right: 2px;
+        font-size: 14px;
     }
 }
 
@@ -1852,4 +1950,146 @@ body.landscape .expanded-workout-container {
         background-color: rgba(255, 255, 255, 0.15);
         z-index: 5;
     }
+}
+
+/* Delete Options Dialog */
+.delete-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.delete-option {
+    display: flex;
+    align-items: center;
+    background-color: #2a2a2a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: left;
+    width: 100%;
+}
+
+.delete-option:hover {
+    background-color: #333;
+    border-color: #444;
+}
+
+.delete-option .material-icons {
+    font-size: 24px;
+    margin-right: 15px;
+    color: #ff5252;
+}
+
+.delete-option-text {
+    flex: 1;
+}
+
+.delete-option-text h4 {
+    margin: 0 0 5px 0;
+    font-size: 1rem;
+    color: #fff;
+}
+
+.delete-option-text p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+#deleteSingleWorkout .material-icons {
+    color: #ff9800;
+}
+
+#deleteSeriesWorkout .material-icons {
+    color: #ff5252;
+}
+
+/* Reschedule Dialog */
+#rescheduleWorkoutDialog .form-group {
+    margin-bottom: 20px;
+}
+
+#rescheduleWorkoutDialog input[type="date"],
+#rescheduleWorkoutDialog input[type="time"] {
+    width: 100%;
+    padding: 10px;
+    background-color: #2a2a2a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #fff;
+}
+
+.help-text {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 5px;
+    margin-left: 25px;
+    font-style: italic;
+}
+
+/* Upcoming Workout Card Enhancements */
+.upcoming-workout-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.reschedule-button, .delete-button {
+    background: transparent;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.reschedule-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #4CAF50;
+}
+
+.delete-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ff5252;
+}
+
+.reschedule-button .material-icons, .delete-button .material-icons {
+    font-size: 20px;
+}
+
+.show-more-container {
+    display: flex;
+    justify-content: center;
+    margin: 15px 0;
+    width: 100%;
+}
+
+.show-more-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #1e1e1e;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.show-more-button:hover {
+    background-color: #2a2a2a;
+}
+
+.show-more-button .material-icons {
+    margin-right: 5px;
+    font-size: 18px;
 } 

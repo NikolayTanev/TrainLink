@@ -18,47 +18,41 @@ A modern workout tracking application built with vanilla JavaScript, HTML, and C
 
 ### Running the Backend Server
 
-1. Make sure you have Python installed (Python 3.8+ recommended)
-2. Double-click the `start_server.bat` file to start the Django server
-   - This will start the server at http://localhost:8000
-   - Keep this terminal window open while using the application
-   - Press Ctrl+C in the terminal to stop the server when done
+Simply open `index.html` in your web browser to start using the application.
 
 ### Running the Frontend
 
-1. Open `login.html` in your browser to start using the application
-2. Register a new account or login with existing credentials
-3. Once logged in, you'll be redirected to the main application
+1. Clone this repository
+2. Open `index.html` in your browser
+3. Make changes to the code as needed
 
 ## Troubleshooting
 
-- **"Failed to fetch" errors**: Make sure the Django server is running by checking if the terminal window shows "Starting development server at http://localhost:8000/"
-- **Login/Registration issues**: Ensure the server is running and check the terminal for any error messages
+- **Workout videos not playing**: Check your internet connection as videos are loaded from external sources
+- **Calendar not showing**: Make sure JavaScript is enabled in your browser
 
 ## Project Structure
 
-- `index.html` - Main application HTML
-- `login.html` - User login page
-- `register.html` - User registration page
-- `styles.css` - All styles for the application
-- `main.js` - Core application functionality
-- `api.js` - API client for communicating with the backend
-- `add-workout-dialog.js` - Add workout dialog functionality
-- `calendar.js` - Calendar and scheduling functionality
-- `trainlink_backend/` - Django backend application
+- `index.html` - Main HTML file
+- `styles.css` - CSS styles
+- `main.js` - Core application logic
+- `add-workout-dialog.js` - Workout creation dialog functionality
+- `calendar.js` - Calendar view functionality
+- `mobile-enhancements.js` - Mobile-specific enhancements
+- `cookie-consent.js` - Cookie consent functionality
+- `privacy-policy.html` - Privacy policy page
+- `terms-of-service.html` - Terms of service page
 
 ## Data Storage
 
-The application now uses a Django backend with SQLite database for data storage, including:
-- User accounts
-- Workouts
+The application uses browser localStorage to store:
+- Workout definitions
 - Scheduled workouts
 - Workout logs
+- User preferences
 
-## Browser Compatibility
-
-This application is compatible with all modern browsers that support ES6 JavaScript features.
+This means all data is stored locally on the user's device and is not sent to any server.
 
 ## License
 
-MIT 
+This project is licensed under the MIT License - see the LICENSE file for details. 
