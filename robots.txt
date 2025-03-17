@@ -1,0 +1,9 @@
+# TrainLink robots.txt
+User-agent: *
+Allow: /
+Allow: /app
+Allow: /privacy
+Allow: /terms
+
+# Sitemap location
+Sitemap: https://trainlink.eu/sitemap.xml 

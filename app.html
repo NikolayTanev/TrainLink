@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TrainLink - Workout Tracker</title>
     
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Use TrainLink's workout tracker to plan, schedule, and track your fitness routines. Create custom workouts, set recurring schedules, and monitor your progress.">
+    <meta name="keywords" content="workout tracker, fitness planner, exercise scheduler, workout app, fitness tracking">
+    <meta property="og:title" content="TrainLink - Workout Tracker">
+    <meta property="og:description" content="Create, schedule and track your workouts with TrainLink's intuitive workout management system.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://trainlink.eu/app">
+    <meta property="og:image" content="https://trainlink.eu/Dashboard-Preview.png">
+    <meta name="twitter:card" content="summary_large_image">
+    
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-5BCPY2QYD5"></script>
     <script>
@@ -18,9 +28,29 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     
+    <!-- URL Router -->
+    <script src="router.js"></script>
+    
     <!-- Google AdSense Script -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7058331956950995"
      crossorigin="anonymous"></script>
+     
+    <!-- Structured Data for Rich Results -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "TrainLink Workout Tracker",
+      "applicationCategory": "HealthApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "description": "TrainLink's workout tracker lets you create custom workout routines, schedule recurring sessions, and track your fitness progress all in one web app."
+    }
+    </script>
 </head>
 <body>
     <div class="workouts-container">

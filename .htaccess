@@ -1,0 +1,39 @@
+# Enable URL Rewriting
+RewriteEngine On
+
+# Set the base directory
+RewriteBase /
+
+# Remove trailing slashes
+RewriteRule ^(.+)/$ $1 [L,R=301]
+
+# Handle clean URLs with redirects to real files
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^app$ app.html [L]
+RewriteRule ^privacy$ privacy-policy.html [L]
+RewriteRule ^terms$ terms-of-service.html [L]
+
+# Prevent directory listings
+Options -Indexes
+
+# Compression for faster page loading
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/x-javascript
+</IfModule>
+
+# Set default character set
+AddDefaultCharset UTF-8
+
+# Cache control
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/jpg "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/gif "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType text/css "access plus 1 month"
+  ExpiresByType application/javascript "access plus 1 month"
+  ExpiresByType text/javascript "access plus 1 month"
+  ExpiresByType text/html "access plus 1 day"
+</IfModule> 
