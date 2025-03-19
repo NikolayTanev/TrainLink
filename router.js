@@ -20,23 +20,54 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Get current page URL
     const path = window.location.pathname;
-    const currentPage = path.split('/').pop();
+    console.log("Current path:", path);
     
-    // Handle redirects for clean URLs
-    // This will convert incoming /app to app.html, etc.
+    // Handle root path specially
+    if (path === '/' || path === '') {
+        // Already at the root, no need to redirect
+        return;
+    }
+    
+    // Check if we're at the exact clean URL that matches a route
+    // For example, if we're at /stats or /app
+    const exactMatch = routesToFiles[path];
+    if (exactMatch) {
+        if (!window.location.href.endsWith(exactMatch)) {
+            console.log(`Redirecting from ${path} to ${exactMatch}`);
+            window.location.href = exactMatch;
+            return;
+        }
+    }
+    
+    // Handle paths with trailing slash
     const cleanPath = path.endsWith('/') ? path.slice(0, -1) : path;
     if (routesToFiles[cleanPath] && !path.includes('.html')) {
+        console.log(`Redirecting from ${cleanPath} to ${routesToFiles[cleanPath]}`);
         window.location.href = routesToFiles[cleanPath];
         return;
     }
     
+    // Get the current page from the path
+    const currentPage = path.split('/').pop();
+    
     // Rewrite URLs to look clean in the address bar
     if (currentPage && routes[currentPage]) {
         const newPath = window.location.pathname.replace(currentPage, routes[currentPage].substring(1));
+        console.log(`Rewriting URL from ${window.location.pathname} to ${newPath}`);
         history.replaceState({}, document.title, newPath);
     }
     
-    // No need to modify the actual link href attributes
-    // The browser will still navigate to the correct .html files,
-    // but the URL displayed will be the clean version
+    // Fix any links on the page to use clean URLs
+    document.querySelectorAll('a').forEach(a => {
+        const href = a.getAttribute('href');
+        if (href && href.endsWith('.html')) {
+            // Remove .html from the end of links
+            for (const [htmlFile, cleanRoute] of Object.entries(routes)) {
+                if (href === htmlFile) {
+                    a.setAttribute('href', cleanRoute);
+                    break;
+                }
+            }
+        }
+    });
 }); 
