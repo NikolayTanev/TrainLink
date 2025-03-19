@@ -201,13 +201,63 @@ function renderUpcomingWorkouts() {
         return;
     }
     
-    // Show only the next 3 workouts
-    const nextWorkouts = upcomingWorkouts.slice(0, 3);
+    // Initially show only 5 workouts
+    const initialCount = 5;
+    const hasMoreWorkouts = upcomingWorkouts.length > initialCount;
     
-    nextWorkouts.forEach(workout => {
+    // Show only the initial workouts
+    const initialWorkouts = upcomingWorkouts.slice(0, initialCount);
+    
+    initialWorkouts.forEach(workout => {
         const card = createUpcomingWorkoutCard(workout);
         upcomingWorkoutsContainer.appendChild(card);
     });
+    
+    // Add "Show More" button if there are more workouts
+    if (hasMoreWorkouts) {
+        const showMoreContainer = document.createElement('div');
+        showMoreContainer.className = 'show-more-container';
+        
+        const showMoreButton = document.createElement('button');
+        showMoreButton.className = 'show-more-button';
+        showMoreButton.innerHTML = `
+            <span class="material-icons">expand_more</span>
+            Show More (${upcomingWorkouts.length - initialCount} more)
+        `;
+        
+        showMoreButton.addEventListener('click', function() {
+            // Remove the show more button
+            showMoreContainer.remove();
+            
+            // Render the remaining workouts
+            upcomingWorkouts.slice(initialCount).forEach(workout => {
+                const card = createUpcomingWorkoutCard(workout);
+                upcomingWorkoutsContainer.appendChild(card);
+            });
+            
+            // Add a "Show Less" button
+            const showLessContainer = document.createElement('div');
+            showLessContainer.className = 'show-more-container';
+            
+            const showLessButton = document.createElement('button');
+            showLessButton.className = 'show-more-button';
+            showLessButton.innerHTML = `
+                <span class="material-icons">expand_less</span>
+                Show Less
+            `;
+            
+            showLessButton.addEventListener('click', function() {
+                // Re-render the upcoming workouts with only the initial entries
+                renderUpcomingWorkouts();
+            });
+            
+            showLessContainer.appendChild(showLessButton);
+            upcomingWorkoutsContainer.appendChild(showLessContainer);
+        });
+        
+        showMoreContainer.appendChild(showMoreButton);
+        upcomingWorkoutsContainer.appendChild(showMoreContainer);
+    }
     
     console.log("Upcoming workouts rendering complete");
 }

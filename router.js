@@ -5,7 +5,8 @@ document.addEventListener('DOMContentLoaded', function() {
         'index.html': '/',
         'app.html': '/app',
         'privacy-policy.html': '/privacy',
-        'terms-of-service.html': '/terms'
+        'terms-of-service.html': '/terms',
+        'stats.html': '/stats'
     };
     
     // Route-to-file mapping (for incoming clean URLs)
@@ -13,7 +14,8 @@ document.addEventListener('DOMContentLoaded', function() {
         '/': 'index.html',
         '/app': 'app.html',
         '/privacy': 'privacy-policy.html',
-        '/terms': 'terms-of-service.html'
+        '/terms': 'terms-of-service.html',
+        '/stats': 'stats.html'
     };
     
     // Get current page URL

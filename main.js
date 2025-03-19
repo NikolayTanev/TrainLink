@@ -696,66 +696,115 @@ function renderScheduledWorkouts() {
     
     console.log(`After filtering duplicates: ${uniqueOccurrences.length} occurrences`);
     
-    // Limit to the next 10 occurrences
-    const upcomingOccurrences = uniqueOccurrences.slice(0, 10);
-    console.log(`Showing ${upcomingOccurrences.length} upcoming occurrences`);
-    
-    if (upcomingOccurrences.length === 0) {
+    if (uniqueOccurrences.length === 0) {
         upcomingWorkoutsContainer.innerHTML = '<div class="empty-upcoming">No upcoming workouts scheduled</div>';
         return;
     }
     
-    upcomingOccurrences.forEach(occurrence => {
-        const card = document.createElement('div');
-        card.className = 'upcoming-workout-card';
-        card.dataset.id = occurrence.id;
-        card.dataset.seriesId = occurrence.seriesId;
-        
-        card.innerHTML = `
-            <div class="upcoming-workout-date">
-                <div class="date">${occurrence.date.toLocaleDateString()}</div>
-                <div class="time">${occurrence.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-            </div>
-            <div class="upcoming-workout-content">
-                <h3>${occurrence.workout.title}</h3>
-                <div class="upcoming-workout-meta">
-                    <span class="duration"><span class="material-icons">schedule</span> ${occurrence.workout.duration}</span>
-                    <span class="difficulty">${occurrence.workout.difficulty}</span>
+    // Initially show only 5 occurrences
+    const initialCount = 5;
+    const hasMoreOccurrences = uniqueOccurrences.length > initialCount;
+    
+    // Function to render workout occurrences
+    const renderOccurrences = (occurrences) => {
+        occurrences.forEach(occurrence => {
+            const card = document.createElement('div');
+            card.className = 'upcoming-workout-card';
+            card.dataset.id = occurrence.id;
+            card.dataset.seriesId = occurrence.seriesId;
+            
+            card.innerHTML = `
+                <div class="upcoming-workout-date">
+                    <div class="date">${occurrence.date.toLocaleDateString()}</div>
+                    <div class="time">${occurrence.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
                 </div>
-                ${occurrence.isRepeating ? 
-                  `<div class="repeat-indicator"><span class="material-icons">repeat</span> ${formatRepeatType(occurrence.repeatType)}</div>` : 
-                  (occurrence.isRescheduled && occurrence.originalRepeatType ? 
-                   `<div class="repeat-indicator"><span class="material-icons">repeat</span> ${formatRepeatType(occurrence.originalRepeatType)}</div>` : 
-                   (occurrence.originalSchedule && occurrence.originalSchedule.originalRepeatType ? 
-                    `<div class="repeat-indicator"><span class="material-icons">repeat</span> ${formatRepeatType(occurrence.originalSchedule.originalRepeatType)}</div>` : ''))}
-            </div>
-            <div class="upcoming-workout-actions">
-                <button class="reschedule-button" title="Reschedule">
-                    <span class="material-icons">event</span>
-                </button>
-                <button class="delete-button" title="Delete">
-                    <span class="material-icons">delete</span>
-                </button>
-            </div>
+                <div class="upcoming-workout-content">
+                    <h3>${occurrence.workout.title}</h3>
+                    <div class="upcoming-workout-meta">
+                        <span class="duration"><span class="material-icons">schedule</span> ${occurrence.workout.duration}</span>
+                        <span class="difficulty">${occurrence.workout.difficulty}</span>
+                    </div>
+                    ${occurrence.isRepeating ? 
+                      `<div class="repeat-indicator"><span class="material-icons">repeat</span> ${formatRepeatType(occurrence.repeatType)}</div>` : 
+                      (occurrence.isRescheduled && occurrence.originalRepeatType ? 
+                       `<div class="repeat-indicator"><span class="material-icons">repeat</span> ${formatRepeatType(occurrence.originalRepeatType)}</div>` : 
+                       (occurrence.originalSchedule && occurrence.originalSchedule.originalRepeatType ? 
+                        `<div class="repeat-indicator"><span class="material-icons">repeat</span> ${formatRepeatType(occurrence.originalSchedule.originalRepeatType)}</div>` : ''))}
+                </div>
+                <div class="upcoming-workout-actions">
+                    <button class="reschedule-button" title="Reschedule">
+                        <span class="material-icons">event</span>
+                    </button>
+                    <button class="delete-button" title="Delete">
+                        <span class="material-icons">delete</span>
+                    </button>
+                </div>
+            `;
+            
+            // Add event listeners
+            const deleteBtn = card.querySelector('.delete-button');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', () => {
+                    showDeleteOptions(occurrence);
+                });
+            }
+            
+            const rescheduleBtn = card.querySelector('.reschedule-button');
+            if (rescheduleBtn) {
+                rescheduleBtn.addEventListener('click', () => {
+                    showRescheduleDialog(occurrence);
+                });
+            }
+            
+            upcomingWorkoutsContainer.appendChild(card);
+        });
+    };
+    
+    // Render initial occurrences
+    renderOccurrences(uniqueOccurrences.slice(0, initialCount));
+    
+    // Add "Show More" button if there are more occurrences
+    if (hasMoreOccurrences) {
+        const showMoreContainer = document.createElement('div');
+        showMoreContainer.className = 'show-more-container';
+        
+        const showMoreButton = document.createElement('button');
+        showMoreButton.className = 'show-more-button';
+        showMoreButton.innerHTML = `
+            <span class="material-icons">expand_more</span>
+            Show More (${uniqueOccurrences.length - initialCount} more)
         `;
         
-        // Add event listeners
-        const deleteBtn = card.querySelector('.delete-button');
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', () => {
-                showDeleteOptions(occurrence);
+        showMoreButton.addEventListener('click', function() {
+            // Remove the show more button
+            showMoreContainer.remove();
+            
+            // Render the remaining occurrences
+            renderOccurrences(uniqueOccurrences.slice(initialCount));
+            
+            // Add a "Show Less" button
+            const showLessContainer = document.createElement('div');
+            showLessContainer.className = 'show-more-container';
+            
+            const showLessButton = document.createElement('button');
+            showLessButton.className = 'show-more-button';
+            showLessButton.innerHTML = `
+                <span class="material-icons">expand_less</span>
+                Show Less
+            `;
+            
+            showLessButton.addEventListener('click', function() {
+                // Re-render with only the initial occurrences
+                renderScheduledWorkouts();
             });
-        }
+            
+            showLessContainer.appendChild(showLessButton);
+            upcomingWorkoutsContainer.appendChild(showLessContainer);
+        });
         
-        const rescheduleBtn = card.querySelector('.reschedule-button');
-        if (rescheduleBtn) {
-            rescheduleBtn.addEventListener('click', () => {
-                showRescheduleDialog(occurrence);
-            });
-        }
-        
-        upcomingWorkoutsContainer.appendChild(card);
-    });
+        showMoreContainer.appendChild(showMoreButton);
+        upcomingWorkoutsContainer.appendChild(showMoreContainer);
+    }
     
     console.log("Scheduled workouts rendering complete");
     
