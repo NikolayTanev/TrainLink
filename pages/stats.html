@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TrainLink - Workout Stats</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="../assets/images/Logo.png" type="image/png">
+    <link rel="apple-touch-icon" href="../assets/images/Logo.png">
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="View your workout statistics and track your fitness progress with TrainLink.">
+    <meta name="keywords" content="workout stats, fitness analytics, workout tracker, exercise statistics">
+    <meta property="og:title" content="TrainLink - Workout Stats">
+    <meta property="og:description" content="View your workout statistics and track your fitness progress with TrainLink.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://trainlink.eu/stats">
+    <meta property="og:image" content="https://trainlink.eu/assets/images/Logo.png">
+    <meta name="twitter:card" content="summary_large_image">
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5BCPY2QYD5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-5BCPY2QYD5');
+    </script>
+    
+    <!-- Styles -->
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+    
+    <!-- Firebase SDK -->
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js"></script>
+    
+    <!-- Core Scripts -->
+    <script type="module" src="../assets/js/core/firebase-config.js"></script>
+    <script type="module" src="../assets/js/core/auth-ui.js"></script>
+    <script type="module" src="../assets/js/core/router.js"></script>
+    
+    <!-- Feature Scripts -->
+    <script type="module" src="../assets/js/features/stats.js"></script>
+    
+    <!-- Custom Styles -->
+    <style>
+        .stats-card-wide {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding-right: 1.5rem;
+        }
+        
+        .stats-wide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .stats-thumbnail-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .stats-share-button {
+            position: static; /* Remove absolute positioning */
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background-color: rgba(76, 175, 80, 0.2); /* Light green background */
+            border: 2px solid #4CAF50; /* Green border */
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .stats-share-button:hover {
+            background-color: #4CAF50;
+            transform: scale(1.05);
+        }
+        
+        .stats-share-button .material-icons {
+            color: #4CAF50;
+            font-size: 1.4rem;
+            transition: color 0.3s ease;
+        }
+        
+        .stats-share-button:hover .material-icons {
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-thumbnail-container {
+                flex-direction: column;
+                align-items: flex-start;
+                width: 100%;
+            }
+            
+            .stats-share-button {
+                align-self: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="workouts-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>TrainLink</h1>
+            <div class="header-actions">
+                <a href="../pages/app.html" class="header-link">Workouts</a>
+                <a href="../pages/devices.html" class="header-link" style="display: none;">Devices</a>
+                <a href="../pages/index.html" class="header-link">Home</a>
+                <div id="authContainer" class="auth-container">
+                    <!-- Auth UI will be inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <section class="stats-section">
+            <div class="section-header">
+                <h2>Stats</h2>
+                <div id="debugInfo" style="display: none; margin-top: 0.5rem; padding: 0.5rem; background-color: #333; border-radius: 0.5rem; font-size: 0.9rem;">
+                    <p>If stats aren't showing correctly, try the following:</p>
+                    <ol style="margin-left: 1.5rem; margin-bottom: 0.5rem;">
+                        <li>Press F12 to open Developer Tools</li>
+                        <li>Check the Console tab for any error messages</li>
+                        <li>Try refreshing the page</li>
+                    </ol>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                        <button id="toggleDebug" style="background: #444; border: none; color: white; padding: 0.3rem 0.5rem; border-radius: 0.3rem; cursor: pointer;">Show/Hide Debug Info</button>
+                        <button id="forceRefresh" style="background: #444; border: none; color: white; padding: 0.3rem 0.5rem; border-radius: 0.3rem; cursor: pointer;">Force Refresh Data</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <!-- Total Workouts Completed -->
+                <div class="stats-card">
+                    <div class="stats-label">TOTAL</div>
+                    <div class="stats-value" id="totalWorkouts">0</div>
+                    <div class="stats-description">WORKOUTS COMPLETED</div>
+                </div>
+                
+                <!-- Longest Streak -->
+                <div class="stats-card">
+                    <div class="stats-label">LONGEST STREAK</div>
+                    <div class="stats-value" id="longestStreak">0</div>
+                    <div class="stats-description">WORKOUTS IN A ROW</div>
+                </div>
+                
+                <!-- Most Completions -->
+                <div class="stats-card-wide">
+                    <div class="stats-wide-content">
+                        <div class="stats-label">MOST COMPLETIONS</div>
+                        <div class="stats-workout-title" id="mostCompletedWorkoutTitle">"NO WORKOUT YET"</div>
+                        <div class="stats-completed">
+                            COMPLETED <span id="mostCompletedCount">0</span> TIMES!
+                        </div>
+                    </div>
+                    <div class="stats-thumbnail-container">
+                        <button class="stats-share-button">
+                            <span class="material-icons">share</span>
+                        </button>
+                        <div class="stats-thumbnail" id="mostCompletedThumbnail">
+                            <!-- Thumbnail will be inserted here by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Frequency -->
+                <div class="stats-card">
+                    <div class="stats-label">FREQUENCY</div>
+                    <div class="stats-value" id="frequency">0</div>
+                    <div class="stats-description">WORKOUTS/WEEK</div>
+                </div>
+                
+                <!-- Top Workout -->
+                <div class="stats-card">
+                    <div class="stats-label">TOP WORKOUT</div>
+                    <div class="stats-workout-name" id="topWorkout">"NONE"</div>
+                    <div class="stats-completed-count">
+                        COMPLETED <span id="topWorkoutCount">0</span> TIMES
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Legal Footer -->
+        <footer class="legal-footer">
+            <div class="info-banner">
+                <span class="material-icons">info</span>
+                <p id="storageMessage">Loading storage status...</p>
+            </div>
+            <div class="footer-links">
+                <a href="../pages/privacy-policy.html" class="footer-link">Privacy Policy</a>
+                <a href="../pages/terms-of-service.html" class="footer-link">Terms of Service</a>
+                <a href="#" id="openCookieSettings" class="footer-link">Cookie Settings</a>
+            </div>
+            <div class="copyright">
+                &copy; 2025 TrainLink. All rights reserved.
+            </div>
+        </footer>
+    </div>
+
+    <!-- Cookie Consent Banner -->
+    <div class="cookie-banner" id="cookieBanner">
+        <div class="cookie-content">
+            <p>This website uses cookies to ensure you get the best experience. By using TrainLink, you agree to our use of cookies and analytics.</p>
+            <div class="cookie-buttons">
+                <button id="acceptCookies" class="btn-accept">Accept All</button>
+                <button id="customizeCookies" class="btn-customize">Customize</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cookie Settings Dialog -->
+    <div class="dialog-overlay" id="cookieSettingsOverlay">
+        <div class="dialog-container">
+            <h2 class="dialog-title">Cookie Settings</h2>
+            
+            <div class="dialog-content">
+                <div class="cookie-setting">
+                    <div class="setting-header">
+                        <h3>Essential Cookies</h3>
+                        <label class="toggle disabled">
+                            <input type="checkbox" checked disabled>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <p>Required for the website to function. Cannot be disabled.</p>
+                </div>
+                
+                <div class="cookie-setting">
+                    <div class="setting-header">
+                        <h3>Analytics Cookies</h3>
+                        <label class="toggle">
+                            <input type="checkbox" id="analyticsConsent" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <p>Help us understand how visitors interact with our website.</p>
+                </div>
+                
+                <div class="cookie-setting">
+                    <div class="setting-header">
+                        <h3>Advertising Cookies</h3>
+                        <label class="toggle">
+                            <input type="checkbox" id="advertisingConsent" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <p>Used to show relevant advertising and track ad performance.</p>
+                </div>
+            </div>
+            
+            <div class="dialog-actions">
+                <button class="btn-cancel" id="cancelCookieSettings">Cancel</button>
+                <button class="btn-save" id="saveCookieSettings">Save Preferences</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Utility Scripts -->
+    <script src="../assets/js/utils/cookie-consent.js"></script>
+    <script src="../assets/js/utils/mobile-enhancements.js"></script>
+
+    <!-- Initialize Auth UI -->
+    <script type="module">
+        import { initAuthUI } from '../assets/js/core/auth-ui.js';
+        import { auth } from '../assets/js/core/firebase-config.js';
+        
+        // Initialize auth UI when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize auth UI with the container ID
+            initAuthUI('authContainer');
+            
+            // Set up notification for cloud storage feature
+            auth.onAuthStateChanged(user => {
+                const storageMessage = document.getElementById('storageMessage');
+                if (!storageMessage) return;
+                
+                if (user) {
+                    storageMessage.innerHTML = `You are logged in as <strong>${user.email}</strong>. Your workouts are being saved to the cloud and can be accessed from any device.`;
+                    storageMessage.parentElement.style.backgroundColor = '#4CAF50';
+                } else {
+                    storageMessage.innerHTML = `Currently your workouts are saved locally on this browser only. <strong>Log in or create an account</strong> to save your workouts to the cloud and access them from any device.`;
+                    storageMessage.parentElement.style.backgroundColor = '';
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
+
