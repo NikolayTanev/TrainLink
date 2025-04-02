@@ -1,15 +1,12 @@
 // TrainLink URL Router
 import { fixPageLinks } from '../utils/path-helper.js';
 
+// Check if we're in development or production environment
+// In development: URLs will have 'pages' in the path or end with .html
+// In production: URLs will be clean (e.g., /app instead of /pages/app.html)
+const isLocalDevelopment = window.location.href.includes('/pages/') || window.location.href.endsWith('.html');
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Configuration - adjust based on your environment
-    // LOCAL DEVELOPMENT MODE: Set to true when using local development
-    // PRODUCTION MODE: Set to false when deploying to the actual site
-    const isLocalDevelopment = true; // Set to true for local development
-    
-    // Define the base path for your application
-    const basePath = isLocalDevelopment ? '/TrainLink/pages' : '';
-    
     // File-to-route mapping (this controls how URLs appear in the browser)
     const routes = {
         'index.html': '/',
@@ -45,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("Current path:", path);
     console.log("Current page:", currentPage);
     
-    // Only rewrite links in local development mode
+    // Only rewrite links in development mode
     if (isLocalDevelopment) {
         // Fix any links on the page to use the correct paths for local development
         document.querySelectorAll('a').forEach(a => {
@@ -70,8 +67,33 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     } else {
-        // In production, we'll let the server handle the routing via .htaccess or netlify.toml
-        // No need to modify URLs in the browser
+        // In production, convert file links to clean URLs
+        document.querySelectorAll('a').forEach(a => {
+            const href = a.getAttribute('href');
+            
+            // Skip external links, anchors, or javascript calls
+            if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('javascript:')) {
+                return;
+            }
+            
+            // Convert HTML file links to clean URLs
+            if (href.includes('.html') || href.includes('/pages/')) {
+                let fileName;
+                
+                // Handle paths like "../pages/app.html" or "/pages/app.html"
+                if (href.includes('/pages/')) {
+                    fileName = href.split('/pages/').pop();
+                } else {
+                    fileName = href.split('/').pop();
+                }
+                
+                // Convert to clean URL if mapping exists
+                if (routes[fileName]) {
+                    a.setAttribute('href', routes[fileName]);
+                    console.log(`Rewritten production link from ${href} to ${routes[fileName]}`);
+                }
+            }
+        });
     }
 
     // Use the path helper to fix links on the page

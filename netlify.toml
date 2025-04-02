@@ -8,62 +8,62 @@
 # DEVELOPMENT MODE: Comment out these redirects during development to prevent redirection loops
 # PRODUCTION MODE: Uncomment these redirects for production deployment
 
-# Redirects and rewrites for clean URLs - COMMENTED OUT FOR DEVELOPMENT
-# [[redirects]]
-#   from = "/"
-#   to = "/pages/index.html"
-#   status = 200
+# Redirects and rewrites for clean URLs
+[[redirects]]
+  from = "/"
+  to = "/pages/index.html"
+  status = 200
 
-# [[redirects]]
-#   from = "/app"
-#   to = "/pages/app.html"
-#   status = 200
+[[redirects]]
+  from = "/app"
+  to = "/pages/app.html"
+  status = 200
 
-# [[redirects]]
-#   from = "/login"
-#   to = "/pages/login.html"
-#   status = 200
+[[redirects]]
+  from = "/login"
+  to = "/pages/login.html"
+  status = 200
 
-# [[redirects]]
-#   from = "/register"
-#   to = "/pages/register.html"
-#   status = 200
+[[redirects]]
+  from = "/register"
+  to = "/pages/register.html"
+  status = 200
 
-# [[redirects]]
-#   from = "/profile"
-#   to = "/pages/profile.html"
-#   status = 200
+[[redirects]]
+  from = "/profile"
+  to = "/pages/profile.html"
+  status = 200
 
-# [[redirects]]
-#   from = "/privacy"
-#   to = "/pages/privacy-policy.html"
-#   status = 200
+[[redirects]]
+  from = "/privacy"
+  to = "/pages/privacy-policy.html"
+  status = 200
 
-# [[redirects]]
-#   from = "/terms"
-#   to = "/pages/terms-of-service.html"
-#   status = 200
+[[redirects]]
+  from = "/terms"
+  to = "/pages/terms-of-service.html"
+  status = 200
 
-# [[redirects]]
-#   from = "/stats"
-#   to = "/pages/stats.html"
-#   status = 200
+[[redirects]]
+  from = "/stats"
+  to = "/pages/stats.html"
+  status = 200
 
-# [[redirects]]
-#   from = "/devices"
-#   to = "/pages/devices.html"
-#   status = 200
+[[redirects]]
+  from = "/devices"
+  to = "/pages/devices.html"
+  status = 200
 
-# [[redirects]]
-#   from = "/not-found"
-#   to = "/pages/404.html"
-#   status = 200
+[[redirects]]
+  from = "/not-found"
+  to = "/pages/404.html"
+  status = 200
 
 # Handle 404 errors
-# [[redirects]]
-#   from = "/*"
-#   to = "/pages/404.html"
-#   status = 404
+[[redirects]]
+  from = "/*"
+  to = "/pages/404.html"
+  status = 404
 
 # Headers for security and optimization - ACTIVE IN BOTH MODES
 [[headers]]

@@ -5,8 +5,10 @@
  * It provides functions to determine proper paths and adjust links accordingly.
  */
 
-// IMPORTANT: Set to true for local development, false for production deployment
-const isLocalDevelopment = true;
+// Auto-detect environment instead of using a hard-coded flag
+// In development: URLs will have 'pages' in the path or end with .html
+// In production: URLs will be clean (e.g., /app instead of /pages/app.html)
+const isLocalDevelopment = window.location.href.includes('/pages/') || window.location.href.endsWith('.html');
 
 /**
  * Calculates a path to a target page based on the environment

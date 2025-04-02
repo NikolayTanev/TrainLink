@@ -4,54 +4,51 @@ TrainLink helps you track, schedule, and achieve your fitness goals with smart w
 
 ## Routing Configuration
 
-TrainLink supports two routing modes: development and production.
+TrainLink supports two routing modes that are now automatically detected:
 
-### Development Mode (Default)
+### Development Mode
 
-This mode uses file paths with .html extensions for better compatibility with local development servers.
-
-To enable development mode:
-
-1. In `assets/js/core/router.js`: Set `isLocalDevelopment = true`
-2. In `assets/js/utils/path-helper.js`: Set `isLocalDevelopment = true`
-3. In `.htaccess`: Comment out all the rewrite rules (already done by default)
-4. In `netlify.toml`: Comment out all the redirect rules (already done by default)
+In development mode, the app uses file paths with .html extensions for better compatibility with local development servers. This mode is automatically detected when URLs contain '/pages/' or end with '.html'.
 
 ### Production Mode
 
-This mode uses clean URLs without .html extensions (e.g., `/app` instead of `/app.html`).
+In production mode, the app uses clean URLs without .html extensions (e.g., `/app` instead of `/app.html`). This mode is automatically detected when accessing the site through clean URLs.
 
-To enable production mode:
-
-1. In `assets/js/core/router.js`: Set `isLocalDevelopment = false`
-2. In `assets/js/utils/path-helper.js`: Set `isLocalDevelopment = false`
-3. In `.htaccess`: Uncomment the rewrite rules
-4. In `netlify.toml`: Uncomment the redirect rules
-
-## Troubleshooting
-
-If you encounter a redirection loop:
-- Make sure all files are consistently set to either development or production mode
-- Check server configuration to ensure it's not adding additional redirects
-
-## Server Configuration
+## Server Configuration Files
 
 The repository includes configuration files for various hosting environments:
 
-- `.htaccess` for Apache servers
-- `netlify.toml` for Netlify hosting
+- `.htaccess` for Apache servers - Already configured for production
+- `netlify.toml` for Netlify hosting - Already configured for production
 
 ## Development
 
 1. Clone the repository
-2. Ensure files are in development mode
-3. Use a local server like Live Server to test
+2. Use a local server like Live Server to test (URLs will have '/pages/' in them)
+3. The app will automatically detect development mode and adjust paths accordingly
 
 ## Deployment
 
-1. Switch to production mode
-2. Deploy to your web hosting
-3. Ensure the server supports URL rewriting
+1. Deploy to your web hosting
+2. The app will automatically detect production mode and use clean URLs
+3. Make sure your server supports URL rewriting
+
+## Troubleshooting
+
+### Script Loading Errors
+
+If you see "Cannot use import statement outside a module" errors, make sure all script tags include `type="module"`:
+
+```html
+<script type="module" src="../assets/js/core/router.js"></script>
+```
+
+### Redirection Loops
+
+If you encounter redirection loops:
+- Clear your browser cache
+- Check server configuration to ensure your server supports URL rewriting
+- Verify that the .htaccess or netlify.toml file is properly deployed
 
 ## License
 

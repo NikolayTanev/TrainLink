@@ -25,23 +25,23 @@
     # DEVELOPMENT MODE: Comment these rules out during development
     # PRODUCTION MODE: Uncomment these rules for production
     
-    # RewriteRule ^app$ pages/app.html [L]
-    # RewriteRule ^login$ pages/login.html [L]
-    # RewriteRule ^register$ pages/register.html [L]
-    # RewriteRule ^profile$ pages/profile.html [L]
-    # RewriteRule ^privacy$ pages/privacy-policy.html [L]
-    # RewriteRule ^terms$ pages/terms-of-service.html [L]
-    # RewriteRule ^stats$ pages/stats.html [L]
-    # RewriteRule ^devices$ pages/devices.html [L]
+    RewriteRule ^app$ pages/app.html [L]
+    RewriteRule ^login$ pages/login.html [L]
+    RewriteRule ^register$ pages/register.html [L]
+    RewriteRule ^profile$ pages/profile.html [L]
+    RewriteRule ^privacy$ pages/privacy-policy.html [L]
+    RewriteRule ^terms$ pages/terms-of-service.html [L]
+    RewriteRule ^stats$ pages/stats.html [L]
+    RewriteRule ^devices$ pages/devices.html [L]
     
     # Special case for the homepage
-    # RewriteRule ^$ pages/index.html [L]
+    RewriteRule ^$ pages/index.html [L]
     
     # Handle 404 errors with custom page
-    # RewriteRule ^not-found$ pages/404.html [L]
-    # RewriteCond %{REQUEST_FILENAME} !-f
-    # RewriteCond %{REQUEST_FILENAME} !-d
-    # RewriteRule ^(.*)$ pages/404.html [L]
+    RewriteRule ^not-found$ pages/404.html [L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ pages/404.html [L]
 </IfModule>
 
 # Set proper caching headers for static assets
