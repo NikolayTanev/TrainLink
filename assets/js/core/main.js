@@ -55,6 +55,23 @@ function initDOMElements() {
 
     // Initialize Schedule workout dialog
     scheduleWorkoutDialog = document.getElementById('scheduleWorkoutDialog');
+    
+    // Make sure all overlays are hidden initially
+    if (expandedWorkoutOverlay) {
+        expandedWorkoutOverlay.style.display = 'none';
+    }
+    
+    if (deleteWorkoutOptionsDialog) {
+        deleteWorkoutOptionsDialog.style.display = 'none';
+    }
+    
+    if (rescheduleWorkoutDialog) {
+        rescheduleWorkoutDialog.style.display = 'none';
+    }
+    
+    if (scheduleWorkoutDialog) {
+        scheduleWorkoutDialog.style.display = 'none';
+    }
 }
 
 // Carousel variables
@@ -78,9 +95,20 @@ async function loadWorkouts() {
         const user = auth.currentUser;
         useFirebase = !!user;
         
+        if (!user) {
+            console.log("User not logged in. Waiting for auth check to complete...");
+            return []; // Return empty array but don't redirect - page will handle redirection
+        }
+        
         if (useFirebase) {
             console.log("User is logged in. Loading workouts from Firebase...");
             try {
+                // Show loading indicator
+                const loadingIndicator = document.createElement('div');
+                loadingIndicator.className = 'loading-indicator';
+                loadingIndicator.innerHTML = '<div class="spinner"></div><p>Loading your workouts...</p>';
+                document.body.appendChild(loadingIndicator);
+                
                 const firestoreWorkouts = await getUserWorkouts();
                 // Process workouts to ensure they have the right structure
                 workouts = firestoreWorkouts.map(workout => {
@@ -104,8 +132,16 @@ async function loadWorkouts() {
                 console.log(`Loaded ${workouts.length} workouts from Firebase`);
                 console.log("Processed workouts:", workouts);
                 
+                // Remove loading indicator
+                loadingIndicator.remove();
+                
                 // Load scheduled workouts after workouts are loaded
                 await loadScheduledWorkouts();
+                
+                // Update UI with the loaded workouts
+                renderWorkoutCards();
+                calculateMaxScroll();
+                updateScrollButtons();
             } catch (error) {
                 console.error("Error loading workouts from Firebase:", error);
                 workouts = [];
@@ -720,7 +756,9 @@ function scrollWorkouts(direction) {
         return;
     }
     
-    const scrollAmount = cardWidth * (direction === 'left' ? -1 : 1);
+    // Calculate scroll amount based on direction
+    // Fix for direction parameter: check for number type or string type
+    const scrollAmount = cardWidth * (typeof direction === 'number' ? direction : (direction === 'left' ? -1 : 1));
     const newPosition = scrollPosition + scrollAmount;
     
     // Add debug logging
@@ -2195,66 +2233,59 @@ async function addWorkout(workoutData) {
     console.log("Adding workout:", workoutData);
     
     try {
-        // Create workout object
-        let workout = {
-            title: workoutData.title,
-            description: workoutData.description || "No description provided",
-            duration: workoutData.duration || "Not specified",
-            difficulty: workoutData.difficulty || "Not specified",
-            icon: workoutData.icon || 'fitness_center',
-            isFavorite: false
-        };
+        let workoutId = null;
         
-        // Add video information if provided
-        if (workoutData.videoUrl) {
-            const videoId = getYoutubeVideoId(workoutData.videoUrl);
-            if (videoId) {
-                workout.video = {
-                    type: 'youtube',
-                    url: workoutData.videoUrl,
-                    title: workoutData.videoTitle || workoutData.title,
-                    thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
-                };
-            }
-        }
-        
-        if (useFirebase) {
-            // Save to Firebase and get the ID
+        // Check if user is logged in to use Firebase
+        if (auth.currentUser) {
+            console.log("User is logged in. Saving workout to Firebase...");
             try {
-                const firestoreId = await saveWorkout(workout);
-                workout.id = firestoreId;
+                // Save to Firebase
+                const firestoreId = await saveWorkout(workoutData);
+                console.log("Workout saved to Firebase with ID:", firestoreId);
                 
-                // Add to local array
-                workouts.push(workout);
+                // Set the ID for local reference
+                workoutId = firestoreId;
+                
+                // Add the new workout to our local array with proper ID
+                const newWorkout = {
+                    ...workoutData,
+                    id: firestoreId,
+                    firebaseId: firestoreId
+                };
+                
+                // Add to workouts array
+                workouts.push(newWorkout);
+                
+                // Also save to localStorage as backup
+                localStorage.setItem('workouts', JSON.stringify(workouts));
             } catch (error) {
-                console.error("Error saving workout to Firebase:", error);
-                
-                // Fallback to localStorage
-                workout.id = Date.now();
-                workouts.push(workout);
-                saveWorkouts();
+                console.error("Error saving to Firebase:", error);
+                return false;
             }
         } else {
-            // Not using Firebase, use local storage
-            workout.id = Date.now();
-            workouts.push(workout);
-            saveWorkouts();
+            console.log("User not logged in. Saving workout to localStorage only...");
+            // Generate a local ID
+            workoutId = Date.now().toString();
+            
+            // Add to workouts array
+            const newWorkout = {
+                ...workoutData,
+                id: workoutId
+            };
+            workouts.push(newWorkout);
+            
+            // Save to localStorage
+            localStorage.setItem('workouts', JSON.stringify(workouts));
         }
         
-        // Update all relevant UI components
+        // Update UI immediately with the new workout
         renderWorkoutCards();
         calculateMaxScroll();
-        updateWorkoutStats();
-        renderScheduledWorkouts();
-        updateCalendarView();
-        
-        // Show a success message
-        const successMessage = document.createElement('div');
-        calculateMaxScroll();
+        updateScrollButtons();
         
         return true;
     } catch (error) {
-        console.error("Error in deleteWorkout:", error);
+        console.error("Error in addWorkout:", error);
         return false;
     }
 }
@@ -2451,68 +2482,56 @@ async function initApp() {
     // Initialize DOM elements
     initDOMElements();
     
-    // Setup event listeners
+    // Set up event listeners for interactive elements
     setupEventListeners();
     
-    // Listen for authentication state changes
+    // Listen for auth state changes
     auth.onAuthStateChanged(async (user) => {
-        console.log(user ? `User logged in: ${user.uid}` : "User logged out");
-        
-        // Update UI based on user
-        updateUserDisplay(user);
-        
-        try {
-            // First load regular workouts
-            await loadWorkouts();
-            console.log(`Loaded ${workouts.length} workouts`);
-            
-            // Small delay to ensure workouts are fully loaded
-            await new Promise(resolve => setTimeout(resolve, 300));
-            
-            // Then load scheduled workouts (which need the workouts to be loaded first)
-            await loadScheduledWorkouts();
-            console.log(`Loaded ${scheduledWorkouts.length} scheduled workouts`);
-            
-            // Load workout logs
-            await loadWorkoutLogs();
-            console.log(`Loaded ${workoutLogs.length} workout logs`);
-            
-            // Render the UI
-            renderWorkoutCards();
-            calculateMaxScroll();
-            renderWorkoutLog();
-            updateWorkoutStats();
-            renderScheduledWorkouts();
-            updateCalendarView();
-        } catch (error) {
-            console.error("Error loading data during auth state change:", error);
-            // Still try to render UI with whatever data we have
-            renderWorkoutCards();
-            calculateMaxScroll();
-            renderWorkoutLog();
-            updateWorkoutStats();
-            renderScheduledWorkouts();
-            updateCalendarView();
+        if (user) {
+            console.log(`User logged in: ${user.email}, initializing app data...`);
+            try {
+                // Load and display workouts
+                await loadWorkouts();
+                
+                // Load and display workout logs
+                await loadWorkoutLogs();
+                
+                // Render UI components
+                renderWorkoutCards();
+                renderWorkoutLog();
+                renderScheduledWorkouts();
+                updateCalendarView();
+                
+                // Initialize workout stats
+                updateWorkoutStats();
+                
+                // Initialize the calendar initially hidden
+                const calendarContainer = document.getElementById('calendarContainer');
+                if (calendarContainer) {
+                    calendarContainer.style.display = 'none';
+                }
+                
+                // Calculate max scroll for the workout carousel
+                calculateMaxScroll();
+                
+                // Update scroll buttons' visibility
+                updateScrollButtons();
+                
+                // Hide loading screen
+                hideLoadingScreen();
+                
+                console.log("App initialization complete");
+            } catch (error) {
+                console.error("Error during app initialization:", error);
+                
+                // Hide loading screen even if there's an error
+                hideLoadingScreen();
+            }
+        } else {
+            console.log("User not logged in during app initialization");
+            // The redirect will be handled by the auth check in app.html
         }
     });
-    
-    // Initial data load for non-authenticated users
-    if (!auth.currentUser) {
-        try {
-            await loadWorkouts();
-            await loadScheduledWorkouts();
-            await loadWorkoutLogs();
-            renderWorkoutCards();
-            calculateMaxScroll();
-            renderWorkoutLog();
-            updateWorkoutStats();
-            renderScheduledWorkouts();
-        } catch (error) {
-            console.error("Error during initial data load:", error);
-        }
-    }
-    
-    console.log("App initialization complete");
 }
 
 // Set up event listeners for the UI
@@ -2694,19 +2713,66 @@ function setupEventListeners() {
     }
     
     console.log("Event listeners setup complete");
+    
+    // Handle workout added event
+    document.addEventListener('workoutAdded', async (event) => {
+        console.log('Workout added event detected in main.js');
+        // Get the newly added workout from event detail
+        const newWorkout = event.detail && event.detail.workout ? event.detail.workout : null;
+        
+        if (newWorkout) {
+            console.log('New workout data available in main.js:', newWorkout);
+            
+            // Process the workout to ensure it has all required data
+            const processedWorkout = processNewWorkout(newWorkout);
+            
+            // Add workout to local array if not already there
+            const existingIndex = workouts.findIndex(w => w.id === processedWorkout.id);
+            if (existingIndex === -1) {
+                workouts.push(processedWorkout);
+            } else {
+                workouts[existingIndex] = processedWorkout;
+            }
+            
+            // Update UI
+            renderWorkoutCards();
+            calculateMaxScroll();
+            updateScrollButtons();
+        }
+    });
+    
+    // Helper function to ensure a newly added workout has complete video data
+    function processNewWorkout(workout) {
+        if (!workout) return workout;
+        
+        // Create a copy to avoid modifying the original
+        const processed = {...workout};
+        
+        // If workout has videoUrl but no video object or incomplete video data
+        if (processed.videoUrl && (!processed.video || !processed.video.thumbnail)) {
+            // Extract YouTube video ID
+            const videoId = getYoutubeVideoId(processed.videoUrl);
+            if (videoId) {
+                processed.video = {
+                    type: 'youtube',
+                    url: processed.videoUrl,
+                    title: processed.videoTitle || processed.title,
+                    thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+                };
+                console.log('Main.js: Added video data to workout:', processed.title);
+            }
+        }
+        
+        return processed;
+    }
 }
 
-// Call initApp when the document is ready
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("DOM fully loaded, initializing app");
-    
-    // Delay app initialization slightly to ensure all scripts are loaded
-    setTimeout(initApp, 100);
-    
-    // Set up debugging listeners
-    document.addEventListener('workoutAdded', () => {
-        console.log("Workout added event detected in main.js");
-    });
+// Initialize when the DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM loaded, initializing app...");
+    // Make sure all overlays are initially hidden
+    hideAllOverlays();
+    initApp();
 });
 
 // Expose functions to global scope
@@ -2907,4 +2973,33 @@ function updateUserDisplay(user) {
             userDisplayArea.style.display = 'none';
         }
     }
+}
+
+// Helper function to hide loading screen
+function hideLoadingScreen() {
+    // Use the common function to hide all overlays
+    hideAllOverlays();
+}
+
+// Helper function to hide all overlays
+function hideAllOverlays() {
+    // Hide loading screen
+    const appLoading = document.getElementById('appLoading');
+    if (appLoading) {
+        appLoading.style.display = 'none';
+    }
+    
+    // Hide expanded workout overlay
+    const expandedOverlay = document.getElementById('expandedWorkoutOverlay');
+    if (expandedOverlay) {
+        expandedOverlay.style.display = 'none';
+    }
+    
+    // Hide all dialog overlays
+    const dialogs = document.querySelectorAll('.dialog-overlay');
+    dialogs.forEach(dialog => {
+        dialog.style.display = 'none';
+    });
+    
+    console.log("All overlays have been hidden");
 }

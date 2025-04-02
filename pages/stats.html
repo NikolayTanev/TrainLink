@@ -46,6 +46,47 @@
     <!-- Feature Scripts -->
     <script type="module" src="../assets/js/features/stats.js"></script>
     
+    <!-- Auth Check (Login Required) -->
+    <script type="module">
+        import { auth } from '../assets/js/core/firebase-config.js';
+        
+        // Check if user is logged in, redirect to login if not
+        document.addEventListener('DOMContentLoaded', () => {
+            // Flag to track if we've checked auth state
+            let authStateChecked = false;
+            
+            auth.onAuthStateChanged(user => {
+                // Mark that we've checked auth state
+                authStateChecked = true;
+                
+                if (!user) {
+                    console.log("User not logged in. Redirecting to login page...");
+                    window.location.href = '../pages/login.html?redirect=stats';
+                } else {
+                    console.log("User is logged in:", user.email);
+                    // Hide loading screen if it exists
+                    const appLoading = document.getElementById('appLoading');
+                    if (appLoading) {
+                        // Keep loading visible, will be hidden after stats load
+                        // Just update the text to show we're logged in
+                        const loadingText = appLoading.querySelector('.app-loading-text');
+                        if (loadingText) {
+                            loadingText.textContent = `Loading stats for ${user.email}...`;
+                        }
+                    }
+                }
+            });
+            
+            // Fallback if Firebase auth is very slow or not working
+            setTimeout(() => {
+                if (!authStateChecked && !auth.currentUser) {
+                    console.log("Auth state check timed out. User might not be logged in.");
+                    window.location.href = '../pages/login.html?redirect=stats';
+                }
+            }, 5000);
+        });
+    </script>
+    
     <!-- Custom Styles -->
     <style>
         .stats-card-wide {
@@ -112,6 +153,13 @@
     </style>
 </head>
 <body>
+    <!-- App Loading Indicator -->
+    <div class="app-loading" id="appLoading">
+        <span class="material-icons app-loading-icon">fitness_center</span>
+        <div class="app-loading-text">Loading Stats...</div>
+        <div class="spinner"></div>
+    </div>
+
     <div class="workouts-container">
         <!-- Header -->
         <div class="header">

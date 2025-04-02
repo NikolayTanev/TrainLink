@@ -67,8 +67,56 @@
     <!-- Firebase -->
     <script type="module" src="../assets/js/core/firebase-config.js"></script>
     <script type="module" src="../assets/js/core/auth-ui.js"></script>
+
+    <!-- Auth Check (Login Required) -->
+    <script type="module">
+        import { auth } from '../assets/js/core/firebase-config.js';
+        
+        // Check if user is logged in, redirect to login if not
+        document.addEventListener('DOMContentLoaded', () => {
+            // Flag to track if we've checked auth state
+            let authStateChecked = false;
+            
+            auth.onAuthStateChanged(user => {
+                // Mark that we've checked auth state
+                authStateChecked = true;
+                
+                if (!user) {
+                    console.log("User not logged in. Redirecting to login page...");
+                    window.location.href = '../pages/login.html?redirect=app';
+                } else {
+                    console.log("User is logged in:", user.email);
+                    // Hide loading screen if it exists
+                    const appLoading = document.getElementById('appLoading');
+                    if (appLoading) {
+                        // Keep loading visible, will be hidden after workouts load
+                        // Just update the text to show we're logged in
+                        const loadingText = appLoading.querySelector('.app-loading-text');
+                        if (loadingText) {
+                            loadingText.textContent = `Loading workouts for ${user.email}...`;
+                        }
+                    }
+                }
+            });
+            
+            // Fallback if Firebase auth is very slow or not working
+            setTimeout(() => {
+                if (!authStateChecked && !auth.currentUser) {
+                    console.log("Auth state check timed out. User might not be logged in.");
+                    window.location.href = '../pages/login.html?redirect=app';
+                }
+            }, 5000);
+        });
+    </script>
 </head>
 <body>
+    <!-- App Loading Indicator -->
+    <div class="app-loading" id="appLoading">
+        <span class="material-icons app-loading-icon">fitness_center</span>
+        <div class="app-loading-text">Loading TrainLink...</div>
+        <div class="spinner"></div>
+    </div>
+
     <div class="workouts-container">
         <!-- Header -->
         <div class="header">
@@ -456,13 +504,71 @@
             });
             
             // Listen for workout added event to update UI
-            document.addEventListener('workoutAdded', () => {
+            document.addEventListener('workoutAdded', (event) => {
                 console.log('Workout added event detected. Updating UI...');
+                
+                // Get the newly added workout if available in the event
+                const newWorkout = event.detail && event.detail.workout ? event.detail.workout : null;
+                if (newWorkout) {
+                    console.log('New workout data available:', newWorkout);
+                    
+                    // Add to window.workouts array if it exists
+                    if (window.workouts) {
+                        // Process the workout to ensure video data is complete
+                        const processedWorkout = processWorkoutVideoData(newWorkout);
+                        
+                        // Check if the workout is already in the array
+                        const existingIndex = window.workouts.findIndex(w => w.id === processedWorkout.id);
+                        if (existingIndex === -1) {
+                            window.workouts.push(processedWorkout);
+                            console.log('Added new workout to window.workouts array');
+                        } else {
+                            console.log('Workout already exists in window.workouts array, updating it');
+                            window.workouts[existingIndex] = processedWorkout;
+                        }
+                    }
+                }
+                
+                // Helper function to ensure workout has complete video data
+                function processWorkoutVideoData(workout) {
+                    if (!workout) return workout;
+                    
+                    // Create a copy to avoid modifying the original
+                    const processed = {...workout};
+                    
+                    // If workout has videoUrl but no video object or incomplete video data
+                    if (processed.videoUrl && (!processed.video || !processed.video.thumbnail)) {
+                        // Extract YouTube video ID
+                        const videoId = extractYoutubeVideoId(processed.videoUrl);
+                        if (videoId) {
+                            processed.video = {
+                                type: 'youtube',
+                                url: processed.videoUrl,
+                                title: processed.videoTitle || processed.title,
+                                thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+                            };
+                            console.log('Added video data to workout:', processed.title);
+                        }
+                    }
+                    
+                    return processed;
+                }
+                
+                // Helper function to extract YouTube video ID
+                function extractYoutubeVideoId(url) {
+                    if (!url) return null;
+                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                    const match = url.match(regExp);
+                    return (match && match[2].length === 11) ? match[2] : null;
+                }
+                
                 // This will refresh the workout cards display
                 if (typeof window.renderWorkoutCards === 'function') {
                     window.renderWorkoutCards();
+                    
                     // Also update other UI elements if needed
                     if (typeof window.calculateMaxScroll === 'function') window.calculateMaxScroll();
+                    if (typeof window.updateScrollButtons === 'function') window.updateScrollButtons();
                     if (typeof window.renderScheduledWorkouts === 'function') window.renderScheduledWorkouts();
                 } else {
                     // If the function isn't available, try reloading the page

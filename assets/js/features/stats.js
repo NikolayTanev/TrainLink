@@ -515,73 +515,66 @@ function fallbackShare(text) {
     }, 3000);
 }
 
-// Initialize the stats page
-async function initStatsPage() {
-    console.log("Stats page: Initializing...");
-    
-    // Add toast styles
-    const style = document.createElement('style');
-    style.textContent = `
-    .toast {
-        position: fixed;
-        bottom: 2rem;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 0.75rem 1.5rem;
-        border-radius: 2rem;
-        z-index: 9999;
-        transition: opacity 0.3s ease;
-    }
-    `;
-    document.head.appendChild(style);
-    
-    try {
-        // Set up auth state change listener
-        auth.onAuthStateChanged(async (user) => {
-            console.log("Stats page: Auth state changed. User logged in:", !!user);
-            
-            // Clear existing data
-            clearLocalData();
-            
-            // Load new data based on auth state
-            await Promise.all([
-                loadStatsWorkouts(),
-                loadStatsWorkoutLogs()
-            ]);
-            
-            // Update UI
-            displayTotalWorkouts();
-            displayLongestStreak();
-            displayFrequency();
-            displayMostCompletedWorkout();
-        });
-        
-        // Setup debug toggle
-        setupDebugToggle();
-        
-        // Set up share button functionality
-        const shareBtn = document.querySelector('.stats-share-button');
-        if (shareBtn) {
-            shareBtn.addEventListener('click', shareStats);
-        }
-    } catch (error) {
-        console.error("Stats page: Error during initialization:", error);
-        // Show error message to user
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.textContent = 'Error loading stats. Please try refreshing the page.';
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            setTimeout(() => {
-                document.body.removeChild(toast);
-            }, 300);
-        }, 3000);
+// Setup stats sharing functionality
+function setupStatsSharing() {
+    // Set up share button functionality
+    const shareBtn = document.querySelector('.stats-share-button');
+    if (shareBtn) {
+        shareBtn.addEventListener('click', shareStats);
     }
 }
 
 // Initialize when the DOM is loaded
-document.addEventListener('DOMContentLoaded', initStatsPage); 
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("Stats page DOM loaded, initializing...");
+    
+    // Setup debug UI toggles first - these don't depend on login
+    setupDebugToggle();
+    
+    // Setup stats sharing - don't depend on login state
+    setupStatsSharing();
+    
+    // Listen for auth state changes
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            console.log(`Stats page: User logged in: ${user.email}, loading stats...`);
+            try {
+                // Load workouts and logs
+                await loadStatsWorkouts();
+                await loadStatsWorkoutLogs();
+                
+                // Process and display stats
+                displayTotalWorkouts();
+                displayLongestStreak();
+                displayFrequency();
+                displayMostCompletedWorkout();
+                
+                // Hide loading screen after everything is loaded
+                const appLoading = document.getElementById('appLoading');
+                if (appLoading) {
+                    appLoading.style.display = 'none';
+                }
+                
+                console.log("Stats page: Initialization complete");
+            } catch (error) {
+                console.error("Stats page: Error during initialization:", error);
+                
+                // Hide loading screen even if there's an error
+                const appLoading = document.getElementById('appLoading');
+                if (appLoading) {
+                    appLoading.style.display = 'none';
+                }
+                
+                // Show error in debug info
+                const debugInfo = document.getElementById('debugInfo');
+                if (debugInfo) {
+                    debugInfo.style.display = 'block';
+                    debugInfo.innerHTML += `<p style="color: #ff6b6b; margin-top: 1rem;">Error: ${error.message}</p>`;
+                }
+            }
+        } else {
+            console.log("Stats page: User not logged in");
+            // Redirect will be handled by the auth check in stats.html
+        }
+    });
+}); 

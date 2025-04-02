@@ -224,6 +224,9 @@ function createMockFirestore() {
   };
 }
 
+// Export Firebase modules
+export { app, auth, db };
+
 // Auth state observer
 export function initAuthStateObserver(callback) {
   onAuthStateChanged(auth, (user) => {
@@ -284,6 +287,4 @@ export function sendPasswordReset(email) {
   } else {
     return sendPasswordResetEmail(auth, email);
   }
-}
-
-export { auth, db }; 
+} 

@@ -316,22 +316,60 @@ async function handleAddWorkout() {
         videoTitle
     };
     
+    // Add video information to ensure proper rendering
+    const videoId = getYoutubeVideoId(videoUrl);
+    if (videoId) {
+        workoutData.video = {
+            type: 'youtube',
+            url: videoUrl,
+            title: videoTitle || title,
+            thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+        };
+    }
+    
     console.log("Created workout object: ", workoutData);
     
     try {
         let success = false;
+        let firestoreId = null;
+        let localId = null;
         
         // Check if user is logged in to use Firebase and if we haven't had Firebase errors
         if (auth.currentUser && canSaveToFirebase) {
             try {
                 console.log("User is logged in. Saving workout to Firebase...");
-                const firestoreId = await saveWorkout(workoutData);
+                firestoreId = await saveWorkout(workoutData);
                 console.log("Workout saved to Firebase with ID:", firestoreId);
+                
+                // Add workout to window.workouts array for immediate UI update
+                const newWorkout = {
+                    ...workoutData,
+                    id: firestoreId,
+                    firebaseId: firestoreId,
+                    isFavorite: false
+                };
+                
+                if (window.workouts) {
+                    window.workouts.push(newWorkout);
+                    
+                    // Update UI immediately
+                    if (typeof window.renderWorkoutCards === 'function') {
+                        window.renderWorkoutCards();
+                        
+                        if (typeof window.calculateMaxScroll === 'function') {
+                            window.calculateMaxScroll();
+                        }
+                        
+                        if (typeof window.updateScrollButtons === 'function') {
+                            window.updateScrollButtons();
+                        }
+                    }
+                }
                 
                 // Add workout to local storage as backup
                 addWorkoutToLocalStorage({
                     ...workoutData,
-                    id: Date.now(),  // Use timestamp as ID for local storage
+                    id: firestoreId,
                     isFavorite: false
                 });
                 
@@ -346,27 +384,104 @@ async function handleAddWorkout() {
                 }
                 
                 // Fallback to local storage
+                localId = Date.now();
                 success = addWorkoutToLocalStorage({
                     ...workoutData,
-                    id: Date.now(),
+                    id: localId,
                     isFavorite: false
                 });
+                
+                // Add to window.workouts for immediate UI update
+                if (window.workouts && success) {
+                    const newWorkout = {
+                        ...workoutData,
+                        id: localId,
+                        isFavorite: false
+                    };
+                    window.workouts.push(newWorkout);
+                    
+                    // Update UI immediately
+                    if (typeof window.renderWorkoutCards === 'function') {
+                        window.renderWorkoutCards();
+                        
+                        if (typeof window.calculateMaxScroll === 'function') {
+                            window.calculateMaxScroll();
+                        }
+                        
+                        if (typeof window.updateScrollButtons === 'function') {
+                            window.updateScrollButtons();
+                        }
+                    }
+                }
             }
         } else {
             // User not logged in or Firebase previously failed, use local storage only
             console.log("User not logged in or Firebase unavailable. Saving workout to local storage only.");
+            localId = Date.now();
             success = addWorkoutToLocalStorage({
                 ...workoutData,
-                id: Date.now(),
+                id: localId,
                 isFavorite: false
             });
+            
+            // Add to window.workouts for immediate UI update
+            if (window.workouts && success) {
+                const newWorkout = {
+                    ...workoutData,
+                    id: localId,
+                    isFavorite: false
+                };
+                window.workouts.push(newWorkout);
+                
+                // Update UI immediately
+                if (typeof window.renderWorkoutCards === 'function') {
+                    window.renderWorkoutCards();
+                    
+                    if (typeof window.calculateMaxScroll === 'function') {
+                        window.calculateMaxScroll();
+                    }
+                    
+                    if (typeof window.updateScrollButtons === 'function') {
+                        window.updateScrollButtons();
+                    }
+                }
+            }
         }
         
         if (success) {
             console.log("Workout added successfully");
             
-            // Trigger UI update
-            const event = new CustomEvent('workoutAdded');
+            // Create a record of the newly added workout for UI update
+            let addedWorkout = {
+                ...workoutData,
+                id: firestoreId || localId,
+                isFavorite: false
+            };
+            
+            // Add Firebase ID if available
+            if (firestoreId) {
+                addedWorkout.firebaseId = firestoreId;
+            }
+            
+            // Ensure video data is complete (sometimes might be lost when saving to Firebase)
+            if (!addedWorkout.video && addedWorkout.videoUrl) {
+                const videoId = getYoutubeVideoId(addedWorkout.videoUrl);
+                if (videoId) {
+                    addedWorkout.video = {
+                        type: 'youtube',
+                        url: addedWorkout.videoUrl,
+                        title: addedWorkout.videoTitle || addedWorkout.title,
+                        thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+                    };
+                }
+            }
+            
+            // Trigger UI update with workout data
+            const event = new CustomEvent('workoutAdded', {
+                detail: {
+                    workout: addedWorkout
+                }
+            });
             document.dispatchEvent(event);
             
             // Close dialog

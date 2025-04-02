@@ -797,10 +797,10 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    display: none;
-    align-items: center;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: none; /* Explicitly set to none by default */
     justify-content: center;
+    align-items: center;
     z-index: 1000;
 }
 
@@ -1056,11 +1056,14 @@ input:focus, select:focus, textarea:focus {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.9);
-    display: none;
-    align-items: center;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: none; /* Explicitly set to none by default */
     justify-content: center;
-    z-index: 1000;
+    align-items: center;
+    z-index: 999;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 1rem;
 }
 
 .expanded-workout-container {
@@ -2919,4 +2922,73 @@ body.landscape .expanded-workout-container {
 
 .upcoming-workout-actions .start-button .material-icons {
     font-size: 14px;
+}
+
+/* Loading indicator styles */
+.loading-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loading-indicator p {
+    margin-top: 16px;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 6px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top: 6px solid #4285F4;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 } 
+
+/* App Loading State */
+.app-loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.app-loading-icon {
+    font-size: 4rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.7; }
+    50% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.7; }
+}
+
+.app-loading-text {
+    font-size: 1.5rem;
+    color: var(--text-color);
+    margin-bottom: 2rem;
+}

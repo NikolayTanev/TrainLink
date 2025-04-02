@@ -11,7 +11,8 @@ import {
     query, 
     where, 
     orderBy,
-    serverTimestamp 
+    serverTimestamp,
+    limit
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 // Collection names
@@ -71,49 +72,52 @@ export async function getUserWorkouts() {
             throw new Error('User must be logged in to get workouts');
         }
 
-        let workoutsQuery;
+        console.log(`Fetching workouts for user ${user.uid}`);
         
+        // First try with just userId filter (no sorting by createdAt)
         try {
-            // Try to create a proper query first
-            workoutsQuery = query(
+            const simpleQuery = query(
                 collection(db, WORKOUTS_COLLECTION),
-                where('userId', '==', user.uid),
-                orderBy('createdAt', 'desc')
+                where('userId', '==', user.uid)
             );
-        } catch (error) {
-            console.warn('Error creating proper query, falling back to simple collection:', error);
-            // Fallback to simple collection if query fails (for mock implementation)
-            workoutsQuery = collection(db, WORKOUTS_COLLECTION);
-        }
-
-        const querySnapshot = await getDocs(workoutsQuery);
-        const workouts = [];
-        
-        querySnapshot.forEach(doc => {
-            const data = doc.data();
             
-            // Only include this user's workouts if we couldn't use a query
-            if (workoutsQuery === collection(db, WORKOUTS_COLLECTION)) {
+            const querySnapshot = await getDocs(simpleQuery);
+            const workouts = [];
+            
+            querySnapshot.forEach(doc => {
+                const data = doc.data();
+                workouts.push({
+                    id: doc.id,
+                    ...data
+                });
+            });
+            
+            console.log(`Retrieved ${workouts.length} workouts for user ${user.uid}`);
+            return workouts;
+        } catch (error) {
+            console.error('Error getting workouts with simple query:', error);
+            
+            // If the simple query fails, fall back to a full collection scan
+            console.warn('Falling back to manual collection scan for workouts');
+            const fullCollection = await getDocs(collection(db, WORKOUTS_COLLECTION));
+            
+            const workouts = [];
+            fullCollection.forEach(doc => {
+                const data = doc.data();
                 if (data && data.userId === user.uid) {
                     workouts.push({
                         id: doc.id,
                         ...data
                     });
                 }
-            } else {
-                // If we used a proper query, all results should be for this user
-                workouts.push({
-                    id: doc.id,
-                    ...data
-                });
-            }
-        });
-
-        console.log(`Retrieved ${workouts.length} workouts for user ${user.uid}`);
-        return workouts;
+            });
+            
+            console.log(`Retrieved ${workouts.length} workouts for user ${user.uid} via collection scan`);
+            return workouts;
+        }
     } catch (error) {
         console.error('Error getting user workouts:', error);
-        throw error;
+        return []; // Return empty array instead of throwing
     }
 }
 
@@ -249,41 +253,36 @@ export async function hasUserWorkouts() {
             return false;
         }
 
-        let workoutsQuery;
+        console.log(`Checking if user ${user.uid} has any workouts`);
         
+        // Try simple query first
         try {
-            // Try to create a proper query first with limit
-            workoutsQuery = query(
+            const simpleQuery = query(
                 collection(db, WORKOUTS_COLLECTION),
                 where('userId', '==', user.uid),
                 // Limit to 1 result since we only need to know if any exist
-                orderBy('createdAt', 'desc')
+                limit(1)
             );
-        } catch (error) {
-            console.warn('Error creating proper query, falling back to simple collection:', error);
-            // Fallback to simple collection if query fails (for mock implementation)
-            workoutsQuery = collection(db, WORKOUTS_COLLECTION);
-        }
-
-        const querySnapshot = await getDocs(workoutsQuery);
-        
-        // If we used the fallback approach, check if any of the results are for this user
-        if (workoutsQuery === collection(db, WORKOUTS_COLLECTION)) {
-            let hasUserWorkout = false;
             
-            querySnapshot.forEach(doc => {
+            const querySnapshot = await getDocs(simpleQuery);
+            return !querySnapshot.empty;
+        } catch (error) {
+            console.error('Error checking workouts with simple query:', error);
+            
+            // Fall back to checking the first few documents
+            const fullCollection = await getDocs(collection(db, WORKOUTS_COLLECTION));
+            
+            for (const doc of fullCollection.docs) {
                 const data = doc.data();
                 if (data && data.userId === user.uid) {
-                    hasUserWorkout = true;
+                    return true;
                 }
-            });
+            }
             
-            return hasUserWorkout;
+            return false;
         }
-        
-        return !querySnapshot.empty;
     } catch (error) {
-        console.error('Error checking for user workouts:', error);
+        console.error('Error checking if user has workouts:', error);
         return false;
     }
 }
@@ -345,49 +344,52 @@ export async function getUserWorkoutLogs() {
             throw new Error('User must be logged in to get workout logs');
         }
 
-        let logsQuery;
+        console.log(`Fetching workout logs for user ${user.uid}`);
         
+        // First try with just userId filter (no sorting by createdAt)
         try {
-            // Try to create a proper query first
-            logsQuery = query(
+            const simpleQuery = query(
                 collection(db, WORKOUT_LOGS_COLLECTION),
-                where('userId', '==', user.uid),
-                orderBy('createdAt', 'desc')
+                where('userId', '==', user.uid)
             );
-        } catch (error) {
-            console.warn('Error creating proper query, falling back to simple collection:', error);
-            // Fallback to simple collection if query fails (for mock implementation)
-            logsQuery = collection(db, WORKOUT_LOGS_COLLECTION);
-        }
-
-        const querySnapshot = await getDocs(logsQuery);
-        const logs = [];
-        
-        querySnapshot.forEach(doc => {
-            const data = doc.data();
             
-            // Only include this user's logs if we couldn't use a query
-            if (logsQuery === collection(db, WORKOUT_LOGS_COLLECTION)) {
+            const querySnapshot = await getDocs(simpleQuery);
+            const logs = [];
+            
+            querySnapshot.forEach(doc => {
+                const data = doc.data();
+                logs.push({
+                    id: doc.id,
+                    ...data
+                });
+            });
+            
+            console.log(`Retrieved ${logs.length} workout logs for user ${user.uid}`);
+            return logs;
+        } catch (error) {
+            console.error('Error getting workout logs with simple query:', error);
+            
+            // If the simple query fails, fall back to a full collection scan
+            console.warn('Falling back to manual collection scan for workout logs');
+            const fullCollection = await getDocs(collection(db, WORKOUT_LOGS_COLLECTION));
+            
+            const logs = [];
+            fullCollection.forEach(doc => {
+                const data = doc.data();
                 if (data && data.userId === user.uid) {
                     logs.push({
                         id: doc.id,
                         ...data
                     });
                 }
-            } else {
-                // If we used a proper query, all results should be for this user
-                logs.push({
-                    id: doc.id,
-                    ...data
-                });
-            }
-        });
-
-        console.log(`Retrieved ${logs.length} workout logs for user ${user.uid}`);
-        return logs;
+            });
+            
+            console.log(`Retrieved ${logs.length} workout logs for user ${user.uid} via collection scan`);
+            return logs;
+        }
     } catch (error) {
         console.error('Error getting user workout logs:', error);
-        throw error;
+        return []; // Return empty array instead of throwing
     }
 }
 

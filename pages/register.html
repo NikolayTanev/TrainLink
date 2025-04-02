@@ -379,7 +379,7 @@
             <div class="divider">OR</div>
             
             <button type="button" id="googleRegister" class="google-btn">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google">
+                <img src="../assets/images/google-logo.svg" alt="Google">
                 Sign up with Google
             </button>
             
@@ -391,9 +391,32 @@
     </div>
     
     <script type="module">
-        import { registerUser, loginWithGoogle } from '../assets/js/core/firebase-config.js';
+        import { registerUser, loginWithGoogle, auth } from '../assets/js/core/firebase-config.js';
         
         document.addEventListener('DOMContentLoaded', () => {
+            // Get redirect parameter from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectPage = urlParams.get('redirect');
+            
+            // Check if user is already logged in
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    console.log("User already logged in. Redirecting...");
+                    // Redirect to appropriate page
+                    if (redirectPage) {
+                        window.location.href = `../pages/${redirectPage}.html`;
+                    } else {
+                        window.location.href = '../pages/app.html';
+                    }
+                }
+            });
+            
+            // Copy redirect parameter to login link if present
+            const loginLink = document.querySelector('.auth-links a[href="login.html"]');
+            if (loginLink && redirectPage) {
+                loginLink.href = `login.html?redirect=${redirectPage}`;
+            }
+            
             const registerForm = document.getElementById('registerForm');
             const registerButton = document.getElementById('registerButton');
             const errorMessage = document.getElementById('errorMessage');
@@ -503,8 +526,12 @@
                     // This would be implemented based on your app's data structure
                     migrateLocalData();
                     
-                    // Redirect to dashboard on success
-                    window.location.href = '../pages/app.html';
+                    // Redirect to appropriate page based on redirect parameter
+                    if (redirectPage) {
+                        window.location.href = `../pages/${redirectPage}.html`;
+                    } else {
+                        window.location.href = '../pages/app.html';
+                    }
                 } catch (error) {
                     // Display error message
                     console.error('Registration error:', error);
@@ -522,8 +549,12 @@
             googleRegisterBtn.addEventListener('click', async () => {
                 try {
                     await loginWithGoogle();
-                    // Redirect to dashboard on success
-                    window.location.href = '../pages/app.html';
+                    // Redirect to appropriate page based on redirect parameter
+                    if (redirectPage) {
+                        window.location.href = `../pages/${redirectPage}.html`;
+                    } else {
+                        window.location.href = '../pages/app.html';
+                    }
                 } catch (error) {
                     console.error('Google login error:', error);
                     errorText.textContent = getErrorMessage(error.code) || 'Failed to register with Google. Please try again.';

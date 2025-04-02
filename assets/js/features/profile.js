@@ -17,6 +17,9 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
 import { updateProfile, deleteUser } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
 
+// Import necessary functions to get workout data
+import { getUserWorkoutLogs, getUserWorkouts } from '../core/firebase-db.js';
+
 // Initialize profile page
 document.addEventListener('DOMContentLoaded', async () => {
     // Use auth state observer instead of direct check
@@ -83,75 +86,179 @@ async function loadUserStats(user) {
         const favoriteWorkoutElement = document.getElementById('favoriteWorkout');
         const totalTimeElement = document.getElementById('totalTime');
         
-        // Get completed workouts
-        const workoutLogsRef = collection(db, 'workoutLogs');
-        const q = query(workoutLogsRef, where('userId', '==', user.uid));
-        const querySnapshot = await getDocs(q);
+        // First try to get completed workouts from Firebase
+        let workoutLogs = [];
+        let workouts = [];
         
-        if (querySnapshot.empty) {
-            return; // No workout data
+        try {
+            // Direct Firestore query instead of using helper function
+            if (db) {
+                const workoutLogsRef = collection(db, 'workoutLogs');
+                const q = query(workoutLogsRef, where('userId', '==', user.uid));
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty) {
+                    querySnapshot.forEach(doc => {
+                        const data = doc.data();
+                        workoutLogs.push({
+                            id: doc.id,
+                            ...data
+                        });
+                    });
+                    console.log(`Retrieved ${workoutLogs.length} workout logs from Firestore`);
+                }
+                
+                // Get workouts
+                const workoutsRef = collection(db, 'workouts');
+                const workoutsQuery = query(workoutsRef, where('userId', '==', user.uid));
+                const workoutsSnapshot = await getDocs(workoutsQuery);
+                
+                if (!workoutsSnapshot.empty) {
+                    workoutsSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        workouts.push({
+                            id: doc.id,
+                            ...data
+                        });
+                    });
+                    console.log(`Retrieved ${workouts.length} workouts from Firestore`);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading from Firebase, trying localStorage:', error);
+        }
+        
+        // If Firebase query failed or returned no data, try localStorage
+        if (workoutLogs.length === 0) {
+            try {
+                const storedLogs = localStorage.getItem('workoutLogs');
+                if (storedLogs) {
+                    workoutLogs = JSON.parse(storedLogs);
+                    console.log(`Retrieved ${workoutLogs.length} workout logs from localStorage`);
+                }
+                
+                const storedWorkouts = localStorage.getItem('workouts');
+                if (storedWorkouts) {
+                    workouts = JSON.parse(storedWorkouts);
+                    console.log(`Retrieved ${workouts.length} workouts from localStorage`);
+                }
+            } catch (e) {
+                console.error('Error loading from localStorage:', e);
+            }
+        }
+        
+        // If we still have no data, leave defaults and exit
+        if (workoutLogs.length === 0) {
+            console.log('No workout data found');
+            return;
         }
         
         // Calculate stats
-        const workouts = [];
         const workoutDays = new Set();
         const workoutCounts = {};
         let totalMinutes = 0;
         
-        querySnapshot.forEach(doc => {
-            const workout = doc.data();
-            workouts.push(workout);
+        workoutLogs.forEach(log => {
+            // Skip invalid logs
+            if (!log) return;
             
-            // Track unique days
-            const workoutDate = new Date(workout.completedAt.toDate());
-            const dateString = workoutDate.toISOString().split('T')[0];
-            workoutDays.add(dateString);
+            // Track unique days - handle different date formats
+            let workoutDate;
             
-            // Count each workout type
-            if (workout.workoutId) {
-                workoutCounts[workout.workoutId] = (workoutCounts[workout.workoutId] || 0) + 1;
+            if (log.date) {
+                workoutDate = new Date(log.date);
+            } else if (log.completedAt) {
+                if (typeof log.completedAt === 'object' && log.completedAt !== null && typeof log.completedAt.toDate === 'function') {
+                    // Firebase Timestamp object
+                    workoutDate = log.completedAt.toDate();
+                } else if (typeof log.completedAt === 'string') {
+                    // ISO string
+                    workoutDate = new Date(log.completedAt);
+                } else {
+                    // Unknown format, use current date as fallback
+                    console.warn('Unknown date format:', log.completedAt);
+                    workoutDate = new Date();
+                }
+            } else {
+                // No date information, use current date as fallback
+                workoutDate = new Date();
             }
             
-            // Add duration
-            if (workout.duration) {
-                totalMinutes += workout.duration;
+            // Only proceed if we have a valid date
+            if (workoutDate && !isNaN(workoutDate.getTime())) {
+                const dateString = workoutDate.toISOString().split('T')[0];
+                workoutDays.add(dateString);
+            }
+            
+            // Count each workout type
+            if (log.workoutId) {
+                workoutCounts[log.workoutId] = (workoutCounts[log.workoutId] || 0) + 1;
+            }
+            
+            // Add duration - handle different formats
+            let duration = 0;
+            
+            if (log.workout && log.workout.duration) {
+                const durationStr = String(log.workout.duration).replace(/\D+/g, '');
+                duration = parseInt(durationStr);
+            } else if (log.duration) {
+                const durationStr = String(log.duration).replace(/\D+/g, '');
+                duration = parseInt(durationStr);
+            }
+            
+            if (!isNaN(duration)) {
+                totalMinutes += duration;
             }
         });
         
         // Update UI
-        if (totalWorkoutsElement) totalWorkoutsElement.textContent = workouts.length;
+        if (totalWorkoutsElement) totalWorkoutsElement.textContent = workoutLogs.length;
         if (activeDaysElement) activeDaysElement.textContent = workoutDays.size;
         
         // Find favorite workout
         if (favoriteWorkoutElement && Object.keys(workoutCounts).length > 0) {
+            // Get the most frequently completed workout
             const favoriteWorkoutId = Object.keys(workoutCounts).reduce((a, b) => 
                 workoutCounts[a] > workoutCounts[b] ? a : b
             );
             
-            // Get workout name
-            const workoutRef = doc(db, 'workouts', favoriteWorkoutId);
-            const workoutSnap = await getDoc(workoutRef);
+            // Try to get workout name
+            let favoriteWorkoutName = 'Unknown';
             
-            if (workoutSnap.exists()) {
-                const workoutData = workoutSnap.data();
-                favoriteWorkoutElement.textContent = workoutData.title || 'Unknown';
+            // First check if it's in the workouts array
+            const foundWorkout = workouts.find(w => w && w.id === favoriteWorkoutId);
+            if (foundWorkout && foundWorkout.title) {
+                favoriteWorkoutName = foundWorkout.title;
             } else {
-                favoriteWorkoutElement.textContent = 'Unknown';
+                // Check workoutLogs if the workout details are embedded there
+                const logWithWorkout = workoutLogs.find(log => 
+                    log && log.workoutId === favoriteWorkoutId && log.workout && log.workout.title
+                );
+                if (logWithWorkout && logWithWorkout.workout) {
+                    favoriteWorkoutName = logWithWorkout.workout.title || 'Unknown';
+                }
             }
+            
+            favoriteWorkoutElement.textContent = favoriteWorkoutName;
+        } else if (favoriteWorkoutElement) {
+            favoriteWorkoutElement.textContent = 'None';
         }
         
         // Format total time
         if (totalTimeElement) {
-            if (totalMinutes < 60) {
+            if (totalMinutes === 0) {
+                totalTimeElement.textContent = '0 min';
+            } else if (totalMinutes < 60) {
                 totalTimeElement.textContent = `${totalMinutes} min`;
             } else {
                 const hours = Math.floor(totalMinutes / 60);
                 const minutes = totalMinutes % 60;
-                totalTimeElement.textContent = `${hours}h ${minutes}m`;
+                totalTimeElement.textContent = `${hours}h ${minutes > 0 ? minutes + 'm' : ''}`;
             }
         }
     } catch (error) {
         console.error('Error loading user stats:', error);
+        // In case of error, leave the default values
     }
 }
 

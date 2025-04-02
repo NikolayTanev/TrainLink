@@ -1,21 +1,69 @@
-# Enable URL Rewriting
-RewriteEngine On
+# TrainLink Web Application - URL Rewrite Rules
+# This file enables clean URLs in production
 
-# Set the base directory
-RewriteBase /
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    
+    # Redirect to www version if needed (uncomment if required)
+    # RewriteCond %{HTTP_HOST} !^www\. [NC]
+    # RewriteRule ^(.*)$ https://www.%{HTTP_HOST}/$1 [R=301,L]
+    
+    # Force HTTPS (uncomment if required)
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    
+    # Handle clean URLs - don't rewrite if file or directory exists
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # Handle clean routes by rewriting to their corresponding HTML files
+    RewriteRule ^app$ pages/app.html [L]
+    RewriteRule ^login$ pages/login.html [L]
+    RewriteRule ^register$ pages/register.html [L]
+    RewriteRule ^profile$ pages/profile.html [L]
+    RewriteRule ^privacy$ pages/privacy-policy.html [L]
+    RewriteRule ^terms$ pages/terms-of-service.html [L]
+    RewriteRule ^stats$ pages/stats.html [L]
+    RewriteRule ^devices$ pages/devices.html [L]
+    
+    # Special case for the homepage
+    RewriteRule ^$ pages/index.html [L]
+    
+    # Handle 404 errors with custom page
+    RewriteRule ^not-found$ pages/404.html [L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ pages/404.html [L]
+</IfModule>
 
-# Remove trailing slashes
-RewriteRule ^(.+)/$ $1 [L,R=301]
+# Set proper caching headers for static assets
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpg "access 1 year"
+    ExpiresByType image/jpeg "access 1 year"
+    ExpiresByType image/gif "access 1 year"
+    ExpiresByType image/png "access 1 year"
+    ExpiresByType image/svg+xml "access 1 year"
+    ExpiresByType text/css "access 1 month"
+    ExpiresByType text/html "access plus 1 day"
+    ExpiresByType application/pdf "access 1 month"
+    ExpiresByType application/javascript "access 1 month"
+    ExpiresByType application/x-javascript "access 1 month"
+    ExpiresByType application/x-shockwave-flash "access 1 month"
+    ExpiresByType image/x-icon "access 1 year"
+    ExpiresDefault "access 1 month"
+</IfModule>
 
-# Handle clean URLs with redirects to real files
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^app$ app.html [L]
-RewriteRule ^privacy$ privacy-policy.html [L]
-RewriteRule ^terms$ terms-of-service.html [L]
-
-# Prevent directory listings
+# Disable directory listing
 Options -Indexes
+
+# Enable CORS if needed
+<IfModule mod_headers.c>
+    <FilesMatch "\.(ttf|ttc|otf|eot|woff|woff2|font.css|css|js|json)$">
+        Header set Access-Control-Allow-Origin "*"
+    </FilesMatch>
+</IfModule>
 
 # Compression for faster page loading
 <IfModule mod_deflate.c>
@@ -23,17 +71,4 @@ Options -Indexes
 </IfModule>
 
 # Set default character set
-AddDefaultCharset UTF-8
-
-# Cache control
-<IfModule mod_expires.c>
-  ExpiresActive On
-  ExpiresByType image/jpg "access plus 1 year"
-  ExpiresByType image/jpeg "access plus 1 year"
-  ExpiresByType image/gif "access plus 1 year"
-  ExpiresByType image/png "access plus 1 year"
-  ExpiresByType text/css "access plus 1 month"
-  ExpiresByType application/javascript "access plus 1 month"
-  ExpiresByType text/javascript "access plus 1 month"
-  ExpiresByType text/html "access plus 1 day"
-</IfModule> 
+AddDefaultCharset UTF-8 

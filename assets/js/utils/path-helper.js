@@ -1,32 +1,35 @@
 /**
  * TrainLink Path Helper Utility
  * 
- * This utility helps with path resolution for local development with Live Server.
- * It provides functions to determine relative paths and adjust links accordingly.
+ * This utility helps with path resolution for both local development and production.
+ * It provides functions to determine proper paths and adjust links accordingly.
  */
 
+// IMPORTANT: Set to false for production deployment
+const isLocalDevelopment = false;
+
 /**
- * Calculates a relative path to a target in the 'pages' directory based on the current location
+ * Calculates a path to a target page based on the environment
  * @param {string} targetFile - The target file (e.g., 'app.html', 'login.html')
- * @returns {string} A relative path to the target
+ * @returns {string} A proper path to the target
  */
 export function getRelativePath(targetFile) {
-    const isLocalDevelopment = true; // Set to true for Live Server
-    
+    // In production, use clean URLs
     if (!isLocalDevelopment) {
-        // In production, use clean URLs
         const cleanURLs = {
             'index.html': '/',
             'app.html': '/app',
+            'login.html': '/login',
+            'register.html': '/register',
+            'profile.html': '/profile',
             'privacy-policy.html': '/privacy',
             'terms-of-service.html': '/terms',
             'stats.html': '/stats',
             'devices.html': '/devices',
-            'login.html': '/login',
-            'register.html': '/register'
+            '404.html': '/not-found'
         };
         
-        return cleanURLs[targetFile] || `/${targetFile}`;
+        return cleanURLs[targetFile] || `/${targetFile.replace('.html', '')}`;
     }
     
     // For local development, we need to calculate relative paths
@@ -50,7 +53,7 @@ export function getRelativePath(targetFile) {
 }
 
 /**
- * Navigates to a target page using relative paths
+ * Navigates to a target page using appropriate paths based on environment
  * @param {string} targetFile - The target file (e.g., 'app.html', 'login.html')
  */
 export function navigateTo(targetFile) {
@@ -58,25 +61,26 @@ export function navigateTo(targetFile) {
 }
 
 /**
- * Fixes all links on the page to use the correct relative paths for local development
+ * Fixes all links on the page to use the correct paths based on environment
  */
 export function fixPageLinks() {
-    const isLocalDevelopment = true; // Set to true for Live Server
-    
+    // Skip in production mode (the main router will handle it)
     if (!isLocalDevelopment) {
-        return; // Don't do anything in production mode
+        return;
     }
     
     // Map of clean URLs to their HTML files
     const routesToFiles = {
         '/': 'index.html',
         '/app': 'app.html',
+        '/login': 'login.html',
+        '/register': 'register.html',
+        '/profile': 'profile.html',
         '/privacy': 'privacy-policy.html',
         '/terms': 'terms-of-service.html',
         '/stats': 'stats.html',
         '/devices': 'devices.html',
-        '/login': 'login.html',
-        '/register': 'register.html'
+        '/not-found': '404.html'
     };
     
     // Fix links on the page
