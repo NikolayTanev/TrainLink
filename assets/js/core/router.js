@@ -5,10 +5,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Configuration - adjust based on your environment
     // LOCAL DEVELOPMENT MODE: Set to true when using local development
     // PRODUCTION MODE: Set to false when deploying to the actual site
-    const isLocalDevelopment = false; // Set to false for production
+    const isLocalDevelopment = true; // Set to true for local development
     
     // Define the base path for your application
-    // For production deployments on trainlink.eu
     const basePath = isLocalDevelopment ? '/TrainLink/pages' : '';
     
     // File-to-route mapping (this controls how URLs appear in the browser)
@@ -71,28 +70,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     } else {
-        // In production, fix any HTML links to use clean URLs
-        document.querySelectorAll('a').forEach(a => {
-            const href = a.getAttribute('href');
-            
-            // Skip external links, anchors, or javascript calls
-            if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('javascript:')) {
-                return;
-            }
-            
-            // Convert HTML file links to clean URLs
-            if (href.includes('.html')) {
-                // Extract the file name
-                const fileName = href.split('/').pop();
-                
-                // Check if we have a route mapping for this file
-                if (routes[fileName]) {
-                    const cleanURL = routes[fileName];
-                    a.setAttribute('href', cleanURL);
-                    console.log(`Rewritten link from ${href} to ${cleanURL}`);
-                }
-            }
-        });
+        // In production, we'll let the server handle the routing via .htaccess or netlify.toml
+        // No need to modify URLs in the browser
     }
 
     // Use the path helper to fix links on the page

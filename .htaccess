@@ -1,5 +1,6 @@
 # TrainLink Web Application - URL Rewrite Rules
 # This file enables clean URLs in production
+# NOTE: Comment out these rules during development to prevent redirection loops
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
@@ -13,28 +14,34 @@
     # RewriteCond %{HTTPS} off
     # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
     
-    # Handle clean URLs - don't rewrite if file or directory exists
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
+    # Prevent redirection loops - don't process files that already exist
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
     
     # Handle clean routes by rewriting to their corresponding HTML files
-    RewriteRule ^app$ pages/app.html [L]
-    RewriteRule ^login$ pages/login.html [L]
-    RewriteRule ^register$ pages/register.html [L]
-    RewriteRule ^profile$ pages/profile.html [L]
-    RewriteRule ^privacy$ pages/privacy-policy.html [L]
-    RewriteRule ^terms$ pages/terms-of-service.html [L]
-    RewriteRule ^stats$ pages/stats.html [L]
-    RewriteRule ^devices$ pages/devices.html [L]
+    # IMPORTANT: Only one of these should be active at a time
+    
+    # DEVELOPMENT MODE: Comment these rules out during development
+    # PRODUCTION MODE: Uncomment these rules for production
+    
+    # RewriteRule ^app$ pages/app.html [L]
+    # RewriteRule ^login$ pages/login.html [L]
+    # RewriteRule ^register$ pages/register.html [L]
+    # RewriteRule ^profile$ pages/profile.html [L]
+    # RewriteRule ^privacy$ pages/privacy-policy.html [L]
+    # RewriteRule ^terms$ pages/terms-of-service.html [L]
+    # RewriteRule ^stats$ pages/stats.html [L]
+    # RewriteRule ^devices$ pages/devices.html [L]
     
     # Special case for the homepage
-    RewriteRule ^$ pages/index.html [L]
+    # RewriteRule ^$ pages/index.html [L]
     
     # Handle 404 errors with custom page
-    RewriteRule ^not-found$ pages/404.html [L]
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*)$ pages/404.html [L]
+    # RewriteRule ^not-found$ pages/404.html [L]
+    # RewriteCond %{REQUEST_FILENAME} !-f
+    # RewriteCond %{REQUEST_FILENAME} !-d
+    # RewriteRule ^(.*)$ pages/404.html [L]
 </IfModule>
 
 # Set proper caching headers for static assets

@@ -5,8 +5,8 @@
  * It provides functions to determine proper paths and adjust links accordingly.
  */
 
-// IMPORTANT: Set to false for production deployment
-const isLocalDevelopment = false;
+// IMPORTANT: Set to true for local development, false for production deployment
+const isLocalDevelopment = true;
 
 /**
  * Calculates a path to a target page based on the environment
