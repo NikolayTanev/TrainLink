@@ -28,8 +28,16 @@ export function getRelativePath(targetFile) {
             'terms-of-service.html': '/terms',
             'stats.html': '/stats',
             'devices.html': '/devices',
+            'shared-workout.html': '/shared-workout',
             '404.html': '/not-found'
         };
+        
+        // Check if there are query parameters in the target file
+        if (targetFile.includes('?')) {
+            const [file, query] = targetFile.split('?');
+            const cleanPath = cleanURLs[file] || `/${file.replace('.html', '')}`;
+            return `${cleanPath}?${query}`;
+        }
         
         return cleanURLs[targetFile] || `/${targetFile.replace('.html', '')}`;
     }
@@ -82,6 +90,7 @@ export function fixPageLinks() {
         '/terms': 'terms-of-service.html',
         '/stats': 'stats.html',
         '/devices': 'devices.html',
+        '/shared-workout': 'shared-workout.html',
         '/not-found': '404.html'
     };
     

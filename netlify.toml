@@ -55,6 +55,12 @@
   status = 200
 
 [[redirects]]
+  from = "/shared-workout"
+  to = "/pages/shared-workout.html"
+  status = 200
+  query = {code = ":code"}
+
+[[redirects]]
   from = "/not-found"
   to = "/pages/404.html"
   status = 200

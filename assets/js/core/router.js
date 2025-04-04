@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'terms-of-service.html': '/terms',
         'stats.html': '/stats',
         'devices.html': '/devices',
+        'shared-workout.html': '/shared-workout',
         '404.html': '/not-found'
     };
     
@@ -32,6 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
         '/terms': 'terms-of-service.html',
         '/stats': 'stats.html',
         '/devices': 'devices.html',
+        '/shared-workout': 'shared-workout.html',
         '/not-found': '404.html'
     };
     
@@ -87,10 +89,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     fileName = href.split('/').pop();
                 }
                 
+                // If there are query parameters, preserve them
+                let query = '';
+                if (fileName.includes('?')) {
+                    [fileName, query] = fileName.split('?');
+                    query = '?' + query;
+                }
+                
                 // Convert to clean URL if mapping exists
                 if (routes[fileName]) {
-                    a.setAttribute('href', routes[fileName]);
-                    console.log(`Rewritten production link from ${href} to ${routes[fileName]}`);
+                    a.setAttribute('href', routes[fileName] + query);
+                    console.log(`Rewritten production link from ${href} to ${routes[fileName] + query}`);
                 }
             }
         });

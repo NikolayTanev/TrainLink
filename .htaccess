@@ -33,6 +33,10 @@
     RewriteRule ^terms$ pages/terms-of-service.html [L]
     RewriteRule ^stats$ pages/stats.html [L]
     RewriteRule ^devices$ pages/devices.html [L]
+    RewriteRule ^shared-workout$ pages/shared-workout.html [L]
+    
+    # Handle shared workout with query parameters
+    RewriteRule ^shared-workout\?(.*)$ pages/shared-workout.html?$1 [L,QSA]
     
     # Special case for the homepage
     RewriteRule ^$ pages/index.html [L]
