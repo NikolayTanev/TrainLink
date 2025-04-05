@@ -69,6 +69,16 @@ async function loadWorkouts() {
 // Export the workouts array and load function
 export { workouts, loadWorkouts, workoutsLoaded };
 
+// Hide loading screen helper
+function hideAppLoading() {
+    console.log("workout-loader: Hiding app loading indicator");
+    const appLoading = document.getElementById('appLoading');
+    if (appLoading) {
+        appLoading.style.display = 'none';
+        console.log("workout-loader: App loading indicator hidden");
+    }
+}
+
 // Initialize when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM loaded, initializing workout loader...");
@@ -79,13 +89,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (user) {
             // Only load workouts if user is logged in
             await loadWorkouts();
+            
+            // Make sure loading screen is hidden after workouts load
+            setTimeout(hideAppLoading, 500);
         }
         // Don't do anything if user is not logged in - the page will handle redirects
     });
     
     // Only do initial load if already logged in
     if (auth.currentUser) {
-        loadWorkouts();
+        loadWorkouts().then(() => {
+            // Make sure loading screen is hidden after workouts load
+            setTimeout(hideAppLoading, 500);
+        });
     }
     
     // Also listen for workout added events

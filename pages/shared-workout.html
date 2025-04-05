@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Workout - TrainLink</title>
+    <meta name="description" content="View and import shared workouts with TrainLink - the smart workout tracker">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+    <link rel="icon" href="../assets/images/favicon.png" type="image/png">
+    
+    <style>
+        /* Specific styles for shared workout page */
+        .shared-workout-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .shared-workout-card {
+            background-color: var(--card-bg, #1e1e1e);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+            color: #fff;
+        }
+        
+        .preview-header {
+            padding: 16px;
+            background-color: var(--primary-color, #6855e0);
+            color: white;
+        }
+        
+        .preview-content {
+            padding: 24px;
+        }
+        
+        .action-buttons {
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+        }
+        
+        .button {
+            padding: 10px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .button.primary {
+            background-color: var(--primary-color, #6855e0);
+            color: white;
+        }
+        
+        .button.secondary {
+            background-color: transparent;
+            border: 1px solid var(--border-color, #444);
+            color: var(--text-color, #fff);
+        }
+        
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary-color, #6855e0);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+            display: block;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-container {
+            text-align: center;
+            padding: 48px;
+            color: #f44336;
+        }
+        
+        .error-container .material-icons {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        /* Workout display styles */
+        .workout-list {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .workout-item {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .workout-thumbnail {
+            width: 80px;
+            height: 60px;
+            border-radius: 4px;
+            object-fit: cover;
+            background-color: #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .workout-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
+        .workout-thumbnail .material-icons {
+            font-size: 30px;
+            color: #6855e0;
+        }
+        
+        .workout-details {
+            flex: 1;
+        }
+        
+        .workout-details h3 {
+            margin: 0 0 4px 0;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .workout-details p {
+            margin: 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .workout-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 4px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .workout-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .workout-meta .material-icons {
+            font-size: 14px;
+        }
+        
+        .auth-msg {
+            background-color: rgba(255, 197, 0, 0.1);
+            border-left: 4px solid #ffc500;
+            padding: 12px 16px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .creator-info {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 20px;
+        }
+        
+        .routine-info {
+            background-color: rgba(104, 85, 224, 0.1);
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        header {
+            background-color: #121212;
+            padding: 16px 0;
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-weight: bold;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo a {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logo img {
+            height: 32px;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 24px;
+            margin: 0;
+            padding: 0;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        footer {
+            background-color: #121212;
+            padding: 40px 0 20px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 80px;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 40px;
+        }
+        
+        .footer-section {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .footer-section h3 {
+            color: white;
+            margin-top: 0;
+        }
+        
+        .footer-section ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .footer-section li {
+            margin-bottom: 8px;
+        }
+        
+        .footer-section a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 16px;
+        }
+        
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 40px auto 0;
+            padding: 20px 20px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+        
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #121212;
+            color: white;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="nav-container">
+            <div class="logo">
+                <a href="../">
+                    <img src="../assets/images/Logo.png" alt="TrainLink Logo">
+                    TrainLink
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../pages/app.html">App</a></li>
+                    <li><a href="../pages/login.html">Login</a></li>
+                    <li><a href="../pages/register.html">Register</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <main>
+        <div class="shared-workout-container">
+            <div id="sharedContent">
+                <!-- Loading state -->
+                <div id="loadingContainer" class="loading-container">
+                    <div class="spinner"></div>
+                    <p>Loading shared workout...</p>
+                </div>
+                
+                <!-- Content will be injected here after loading -->
+                <div id="workoutContainer" style="display:none;">
+                    <!-- Will be populated with JavaScript -->
+                </div>
+                
+                <!-- Error state -->
+                <div id="errorContainer" class="error-container" style="display:none;">
+                    <span class="material-icons">error_outline</span>
+                    <h2>Error Loading Workout</h2>
+                    <p id="errorMessage">Unable to load the shared workout. Please check the URL and try again.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>TrainLink</h3>
+                <p>The smart workout tracker for everyone</p>
+            </div>
+            <div class="footer-section">
+                <h3>Links</h3>
+                <ul>
+                    <li><a href="../">Home</a></li>
+                    <li><a href="../pages/app.html">App</a></li>
+                    <li><a href="../pages/privacy-policy.html">Privacy Policy</a></li>
+                    <li><a href="../pages/terms-of-service.html">Terms of Service</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Connect</h3>
+                <div class="social-links">
+                    <a href="#" aria-label="Twitter"><span class="material-icons">twitter</span></a>
+                    <a href="#" aria-label="Facebook"><span class="material-icons">facebook</span></a>
+                    <a href="#" aria-label="Instagram"><span class="material-icons">instagram</span></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2023 TrainLink. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            getDoc, 
+            collection, 
+            getDocs, 
+            query, 
+            where,
+            setDoc
+        } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCSA4Qkt3rj7Juijpwi45ZKGcVHSjdvvVw",
+            authDomain: "trainlinkeureal.firebaseapp.com",
+            projectId: "trainlinkeureal",
+            storageBucket: "trainlinkeureal.firebasestorage.app",
+            messagingSenderId: "630231025389",
+            appId: "1:630231025389:web:cebfb048c5b95b95616ee4",
+            measurementId: "G-24Q1VQFNM3"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const SHARED_WORKOUTS_COLLECTION = 'sharedWorkouts';
+        
+        // DOM Elements
+        const loadingContainer = document.getElementById('loadingContainer');
+        const workoutContainer = document.getElementById('workoutContainer');
+        const errorContainer = document.getElementById('errorContainer');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        // Extract share code from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const shareCode = urlParams.get('code');
+        
+        console.log("Page loaded with share code:", shareCode);
+        
+        // Load shared workout data
+        async function loadSharedWorkout() {
+            if (!shareCode) {
+                showError("No share code provided. Please check the URL.");
+                return;
+            }
+            
+            try {
+                // Get the shared workout document
+                const shareDocRef = doc(db, SHARED_WORKOUTS_COLLECTION, shareCode);
+                const shareDoc = await getDoc(shareDocRef);
+                
+                if (!shareDoc.exists()) {
+                    showError("Shared workout not found. It may have been deleted or the link is incorrect.");
+                    return;
+                }
+                
+                // Get the share data
+                const shareData = shareDoc.data();
+                console.log("Shared workout data:", shareData);
+                
+                // Update access stats
+                try {
+                    await setDoc(shareDocRef, {
+                        accessCount: (shareData.accessCount || 0) + 1,
+                        lastAccessed: new Date().toISOString()
+                    }, { merge: true });
+                } catch (statsError) {
+                    console.error("Error updating access stats:", statsError);
+                    // Continue even if stats update fails
+                }
+                
+                // Check if it's a routine or single workout
+                if (shareData.isRoutine) {
+                    // Display routine (multiple workouts)
+                    await displayRoutine(shareData);
+                } else {
+                    // Display single workout
+                    await displayWorkout(shareData);
+                }
+                
+            } catch (error) {
+                console.error("Error loading shared workout:", error);
+                showError("Error loading the shared workout: " + error.message);
+            }
+        }
+        
+        // Display a single workout
+        async function displayWorkout(shareData) {
+            try {
+                // Get the workout details
+                let workoutData = null;
+                
+                if (shareData.workoutId) {
+                    // Try to get the workout from Firestore
+                    try {
+                        const workoutsRef = collection(db, 'workouts');
+                        const q = query(workoutsRef, where("id", "==", shareData.workoutId));
+                        const querySnapshot = await getDocs(q);
+                        
+                        if (!querySnapshot.empty) {
+                            workoutData = querySnapshot.docs[0].data();
+                        }
+                    } catch (error) {
+                        console.error("Error fetching workout details:", error);
+                        // Continue with basic info if detailed fetch fails
+                    }
+                }
+                
+                // Build the workout UI
+                const thumbnailUrl = workoutData?.video?.thumbnail || '';
+                const title = workoutData?.title || 'Shared Workout';
+                const description = workoutData?.description || 'No description available';
+                const duration = workoutData?.duration || 'Unknown duration';
+                const difficulty = workoutData?.difficulty || 'Unknown difficulty';
+                
+                let html = `
+                    <div class="shared-workout-card">
+                        <div class="preview-header">
+                            <h1>Shared Workout</h1>
+                        </div>
+                        <div class="preview-content">
+                            <div class="creator-info">
+                                Shared on ${new Date(shareData.createdAt).toLocaleDateString()}
+                            </div>
+                            
+                            <div class="workout-item">
+                                <div class="workout-thumbnail">
+                                    ${thumbnailUrl ? 
+                                        `<img src="${thumbnailUrl}" alt="${title}">` : 
+                                        `<span class="material-icons">fitness_center</span>`
+                                    }
+                                </div>
+                                <div class="workout-details">
+                                    <h3>${title}</h3>
+                                    <p>${description}</p>
+                                    <div class="workout-meta">
+                                        <span><span class="material-icons">schedule</span> ${duration}</span>
+                                        <span><span class="material-icons">fitness_center</span> ${difficulty}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="authContainer">
+                                <!-- Auth status will be inserted here -->
+                            </div>
+                            
+                            <div class="action-buttons">
+                                <a href="app.html" class="button secondary">
+                                    <span class="material-icons">home</span>
+                                    Go to App
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Show the content
+                workoutContainer.innerHTML = html;
+                hideLoading();
+                workoutContainer.style.display = 'block';
+                
+                // Check auth state for import button
+                checkAuthState();
+                
+            } catch (error) {
+                console.error("Error displaying workout:", error);
+                showError("Error displaying the workout: " + error.message);
+            }
+        }
+        
+        // Display a routine (multiple workouts)
+        async function displayRoutine(shareData) {
+            try {
+                // Get the workout details for all workouts in the routine
+                const workouts = [];
+                
+                if (shareData.routineWorkouts && shareData.routineWorkouts.length > 0) {
+                    for (const workoutId of shareData.routineWorkouts) {
+                        try {
+                            // Try to get each workout from Firestore
+                            const workoutsRef = collection(db, 'workouts');
+                            const q = query(workoutsRef, where("id", "==", workoutId));
+                            const querySnapshot = await getDocs(q);
+                            
+                            if (!querySnapshot.empty) {
+                                workouts.push(querySnapshot.docs[0].data());
+                            } else {
+                                // Add placeholder if workout not found
+                                workouts.push({
+                                    id: workoutId,
+                                    title: 'Unknown Workout',
+                                    description: 'This workout data could not be retrieved',
+                                    duration: 'Unknown',
+                                    difficulty: 'Unknown'
+                                });
+                            }
+                        } catch (error) {
+                            console.error(`Error fetching workout ${workoutId}:`, error);
+                            // Add placeholder on error
+                            workouts.push({
+                                id: workoutId,
+                                title: 'Error Loading Workout',
+                                description: 'There was an error loading this workout',
+                                duration: 'Unknown',
+                                difficulty: 'Unknown'
+                            });
+                        }
+                    }
+                }
+                
+                // Build the routine UI
+                let html = `
+                    <div class="shared-workout-card">
+                        <div class="preview-header">
+                            <h1>Shared Workout Routine</h1>
+                        </div>
+                        <div class="preview-content">
+                            <div class="creator-info">
+                                Shared on ${new Date(shareData.createdAt).toLocaleDateString()}
+                            </div>
+                            
+                            <div class="routine-info">
+                                <h3>This routine contains ${workouts.length} workouts</h3>
+                                <p>You can import this entire routine to your workouts.</p>
+                            </div>
+                            
+                            <div class="workout-list">
+                `;
+                
+                // Add each workout in the routine
+                for (const workout of workouts) {
+                    const thumbnailUrl = workout.video?.thumbnail || '';
+                    
+                    html += `
+                        <div class="workout-item">
+                            <div class="workout-thumbnail">
+                                ${thumbnailUrl ? 
+                                    `<img src="${thumbnailUrl}" alt="${workout.title}">` : 
+                                    `<span class="material-icons">fitness_center</span>`
+                                }
+                            </div>
+                            <div class="workout-details">
+                                <h3>${workout.title}</h3>
+                                <p>${workout.description || 'No description available'}</p>
+                                <div class="workout-meta">
+                                    <span><span class="material-icons">schedule</span> ${workout.duration || 'Unknown'}</span>
+                                    <span><span class="material-icons">fitness_center</span> ${workout.difficulty || 'Unknown'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                html += `
+                            </div>
+                            
+                            <div id="authContainer">
+                                <!-- Auth status will be inserted here -->
+                            </div>
+                            
+                            <div class="action-buttons">
+                                <a href="app.html" class="button secondary">
+                                    <span class="material-icons">home</span>
+                                    Go to App
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Show the content
+                workoutContainer.innerHTML = html;
+                hideLoading();
+                workoutContainer.style.display = 'block';
+                
+                // Check auth state for import button
+                checkAuthState();
+                
+            } catch (error) {
+                console.error("Error displaying routine:", error);
+                showError("Error displaying the workout routine: " + error.message);
+            }
+        }
+        
+        // Check authentication state and update UI accordingly
+        function checkAuthState() {
+            const authContainer = document.getElementById('authContainer');
+            if (!authContainer) return;
+            
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // User is signed in
+                    authContainer.innerHTML = `
+                        <div class="action-buttons" style="margin-top: 20px;">
+                            <button id="importWorkout" class="button primary">
+                                <span class="material-icons">download</span>
+                                Import to My Workouts
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Add import functionality
+                    const importButton = document.getElementById('importWorkout');
+                    if (importButton) {
+                        importButton.addEventListener('click', importSharedWorkout);
+                    }
+                } else {
+                    // User is not signed in
+                    authContainer.innerHTML = `
+                        <div class="auth-msg">
+                            <p>You need to be logged in to import this workout.</p>
+                            <a href="login.html?redirect=shared-workout.html?code=${shareCode}" class="button primary">Login</a>
+                        </div>
+                    `;
+                }
+            });
+        }
+        
+        // Import the shared workout to the user's workouts
+        async function importSharedWorkout() {
+            // This would be implemented in a production app
+            alert("Importing of shared workouts is not implemented in this demo version.");
+        }
+        
+        // Show error message
+        function showError(message) {
+            hideLoading();
+            errorMessage.textContent = message;
+            errorContainer.style.display = 'block';
+        }
+        
+        // Hide loading indicator
+        function hideLoading() {
+            loadingContainer.style.display = 'none';
+        }
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', loadSharedWorkout);
+    </script>
+</body>
+</html> 

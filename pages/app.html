@@ -106,6 +106,16 @@
                     window.location.href = '../pages/login.html?redirect=app';
                 }
             }, 5000);
+
+            // Make sure loading screen doesn't stay visible forever
+            // This is a safeguard in case other code fails to hide it
+            setTimeout(() => {
+                const appLoading = document.getElementById('appLoading');
+                if (appLoading) {
+                    console.log("Forcibly hiding loading screen after timeout");
+                    appLoading.style.display = 'none';
+                }
+            }, 8000); // 8 second maximum loading time
         });
     </script>
 </head>
@@ -353,6 +363,11 @@
                     </div>
                     
                     <div class="form-group">
+                        <label for="description">Description (Optional)</label>
+                        <textarea id="description" name="description" rows="3" placeholder="Briefly describe this workout..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
                         <label for="icon">Workout Icon (Optional)</label>
                         <input type="hidden" id="selectedIcon" name="icon" value="fitness_center">
                         <div class="icon-selector" id="iconSelector">
@@ -467,7 +482,7 @@
     </div>
 
     <script type="module" src="../assets/js/core/main.js"></script>
-    <script type="module" src="../assets/js/features/add-workout-dialog.js"></script>
+    <script type="module" src="../assets/js/features/add-workout-dialog.js" defer></script>
     <script type="module" src="../assets/js/features/workout-loader.js"></script>
     <script type="module" src="../assets/js/features/calendar.js"></script>
     <script src="../assets/js/utils/cookie-consent.js"></script>

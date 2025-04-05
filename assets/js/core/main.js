@@ -7,6 +7,10 @@ let currentWorkoutId = null;
 let currentScheduleId = null; // For tracking which workout is being deleted or rescheduled
 let useFirebase = false; // Flag to determine if we should use Firebase
 
+// Add these global variables at the top of the file near the other variables
+let selectionMode = false;
+let selectedWorkouts = new Set(); // Store IDs of selected workouts
+
 // Import Firebase modules
 import { auth } from './firebase-config.js';
 import { 
@@ -23,6 +27,9 @@ import {
     updateScheduledWorkout,
     deleteScheduledWorkout as deleteScheduledWorkoutFromFirebase
 } from './firebase-db.js';
+
+// Import the workout sharing functionality
+import { showShareWorkoutDialog } from '../features/workout-sharing.js';
 
 // DOM Elements
 let workoutCardsContainer;
@@ -650,6 +657,9 @@ function renderWorkoutCards() {
                         <span class="material-icons">event</span>
                         Schedule
                     </button>
+                    <button class="share-button">
+                        <span class="material-icons">share</span>
+                    </button>
                     <button class="delete-button">
                         <span class="material-icons">delete</span>
                     </button>
@@ -680,6 +690,13 @@ function renderWorkoutCards() {
             });
         }
         
+        const shareBtn = card.querySelector('.share-button');
+        if (shareBtn) {
+            shareBtn.addEventListener('click', () => {
+                shareWorkout(workout.id);
+            });
+        }
+        
         const deleteBtn = card.querySelector('.delete-button');
         if (deleteBtn) {
             deleteBtn.addEventListener('click', () => {
@@ -700,6 +717,24 @@ function renderWorkoutCards() {
     });
     
     console.log("Workout cards rendering complete");
+    
+    // At the end of the renderWorkoutCards function, after all cards are created:
+    if (selectionMode) {
+        // Re-apply selection mode classes and handlers to all cards
+        const workoutCards = document.querySelectorAll('.workout-card');
+        workoutCards.forEach(card => {
+            const workoutId = card.getAttribute('data-id');
+            card.classList.add('selectable');
+            
+            // Mark as selected if it's in the selectedWorkouts set
+            if (workoutId && selectedWorkouts.has(workoutId)) {
+                card.classList.add('selected');
+            }
+            
+            // Add click handler
+            card.addEventListener('click', toggleWorkoutSelection);
+        });
+    }
 }
 
 // Calculate maximum scroll position
@@ -2765,6 +2800,26 @@ function setupEventListeners() {
         
         return processed;
     }
+
+    // Add button to toggle selection mode in the section header
+    const sectionHeader = document.querySelector('.suggested-workouts .section-header');
+    if (sectionHeader) {
+        const selectButton = document.createElement('button');
+        selectButton.className = 'selection-button';
+        selectButton.innerHTML = '<span class="material-icons">checklist</span> Select';
+        selectButton.id = 'toggleSelectionMode';
+        
+        // Add it before the Add Workout button
+        const addButton = document.querySelector('.add-workout-button');
+        if (addButton) {
+            sectionHeader.insertBefore(selectButton, addButton);
+        } else {
+            sectionHeader.appendChild(selectButton);
+        }
+        
+        // Add event listener
+        selectButton.addEventListener('click', toggleSelectionMode);
+    }
 }
 
 // Initialize when the DOM is loaded
@@ -2977,29 +3032,231 @@ function updateUserDisplay(user) {
 
 // Helper function to hide loading screen
 function hideLoadingScreen() {
-    // Use the common function to hide all overlays
+    console.log("Hiding loading screen...");
+    
+    // Hide the app loading indicator specifically
+    const appLoading = document.getElementById('appLoading');
+    if (appLoading) {
+        appLoading.style.display = 'none';
+        console.log("App loading indicator hidden");
+    }
+    
+    // Also use the common function to hide all overlays
     hideAllOverlays();
 }
 
 // Helper function to hide all overlays
 function hideAllOverlays() {
-    // Hide loading screen
-    const appLoading = document.getElementById('appLoading');
-    if (appLoading) {
-        appLoading.style.display = 'none';
-    }
+    const overlays = document.querySelectorAll('.expanded-workout-overlay, .dialog-overlay');
+    overlays.forEach(overlay => {
+        overlay.style.display = 'none';
+        overlay.classList.remove('visible');
+    });
     
-    // Hide expanded workout overlay
-    const expandedOverlay = document.getElementById('expandedWorkoutOverlay');
-    if (expandedOverlay) {
-        expandedOverlay.style.display = 'none';
-    }
-    
-    // Hide all dialog overlays
-    const dialogs = document.querySelectorAll('.dialog-overlay');
+    const dialogs = document.querySelectorAll('.dialog-container');
     dialogs.forEach(dialog => {
         dialog.style.display = 'none';
     });
     
     console.log("All overlays have been hidden");
+}
+
+// Function to share a workout
+function shareWorkout(workoutId) {
+    console.log(`Sharing workout ID: ${workoutId}`);
+    
+    try {
+        // Check if user is logged in
+        if (!auth.currentUser) {
+            const confirmLogin = confirm('You need to be logged in to share workouts. Would you like to log in now?');
+            if (confirmLogin) {
+                window.location.href = 'login.html?redirect=app';
+            }
+            return;
+        }
+        
+        // First try to use the proper share dialog
+        try {
+            // Show the share dialog
+            showShareWorkoutDialog(workoutId);
+        } catch (error) {
+            console.error("Error using share dialog, falling back to basic share:", error);
+            // Simple fallback to at least allow sharing
+            const workout = workouts.find(w => w.id === workoutId);
+            if (workout) {
+                // Create a simplified sharing message
+                const shareText = `Check out this workout: "${workout.title}" on TrainLink!`;
+                const shareUrl = `${window.location.origin}/pages/app.html`;
+                
+                // Try to use the Web Share API if available
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'TrainLink Workout',
+                        text: shareText,
+                        url: shareUrl
+                    }).catch(err => {
+                        console.error("Error with Web Share API:", err);
+                        // Last resort fallback
+                        alert(`Share this workout:\n\n${shareText}\n${shareUrl}`);
+                    });
+                } else {
+                    // Fallback for browsers that don't support the Web Share API
+                    alert(`Share this workout:\n\n${shareText}\n${shareUrl}`);
+                    
+                    // Try to copy to clipboard
+                    try {
+                        const textarea = document.createElement('textarea');
+                        textarea.value = `${shareText}\n${shareUrl}`;
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        alert("Share text copied to clipboard!");
+                    } catch (clipboardError) {
+                        console.error("Could not copy to clipboard:", clipboardError);
+                    }
+                }
+            } else {
+                alert("Sorry, couldn't find the workout to share.");
+            }
+        }
+    } catch (error) {
+        console.error("Critical error in shareWorkout:", error);
+        alert("Sorry, there was a problem sharing the workout. Please try again later.");
+    }
+}
+
+// Function to share multiple workouts as a routine
+function shareRoutine(workoutIds) {
+    console.log(`Sharing routine with ${workoutIds.length} workouts`);
+    
+    // Check if user is logged in
+    if (!auth.currentUser) {
+        const confirmLogin = confirm('You need to be logged in to share routines. Would you like to log in now?');
+        if (confirmLogin) {
+            window.location.href = 'login.html?redirect=app';
+        }
+        return;
+    }
+    
+    // Show the share dialog for a routine
+    showShareWorkoutDialog(null, true, workoutIds);
+}
+
+// Function to share selected workouts
+function shareSelectedWorkouts() {
+    if (selectedWorkouts.size === 0) {
+        return; // No workouts selected
+    }
+    
+    const workoutIds = Array.from(selectedWorkouts);
+    console.log(`Sharing ${workoutIds.length} workouts as a routine`);
+    
+    // Use the existing shareRoutine function
+    shareRoutine(workoutIds);
+    
+    // Exit selection mode after sharing
+    toggleSelectionMode();
+}
+
+// Function to toggle selection mode
+function toggleSelectionMode() {
+    selectionMode = !selectionMode;
+    selectedWorkouts.clear(); // Clear selections when toggling
+    
+    // Toggle selection mode button appearance
+    const selectButton = document.getElementById('toggleSelectionMode');
+    if (selectButton) {
+        if (selectionMode) {
+            selectButton.innerHTML = '<span class="material-icons">checklist</span> Cancel';
+            selectButton.classList.add('cancel-selection-button');
+        } else {
+            selectButton.innerHTML = '<span class="material-icons">checklist</span> Select';
+            selectButton.classList.remove('cancel-selection-button');
+        }
+    }
+    
+    // Show/hide selection controls
+    updateSelectionControls();
+    
+    // Make workout cards selectable
+    const workoutCards = document.querySelectorAll('.workout-card');
+    workoutCards.forEach(card => {
+        if (selectionMode) {
+            card.classList.add('selectable');
+            // Add click handler for selection
+            card.addEventListener('click', toggleWorkoutSelection);
+        } else {
+            card.classList.remove('selectable', 'selected');
+            // Remove click handler when exiting selection mode
+            card.removeEventListener('click', toggleWorkoutSelection);
+        }
+    });
+    
+    // Re-render workout cards to update UI
+    renderWorkoutCards();
+}
+
+// Handle workout card selection
+function toggleWorkoutSelection(event) {
+    // Don't trigger card clicks for button clicks inside the card
+    if (event.target.closest('button')) {
+        event.stopPropagation();
+        return;
+    }
+    
+    const card = event.currentTarget;
+    const workoutId = card.getAttribute('data-id');
+    
+    if (!workoutId) return;
+    
+    if (selectedWorkouts.has(workoutId)) {
+        selectedWorkouts.delete(workoutId);
+        card.classList.remove('selected');
+    } else {
+        selectedWorkouts.add(workoutId);
+        card.classList.add('selected');
+    }
+    
+    // Update selection count and controls
+    updateSelectionControls();
+}
+
+// Update the selection controls UI
+function updateSelectionControls() {
+    // Find or create the selection controls container
+    let controlsContainer = document.querySelector('.selection-mode-controls');
+    
+    if (selectionMode) {
+        if (!controlsContainer) {
+            // Create selection controls if they don't exist
+            controlsContainer = document.createElement('div');
+            controlsContainer.className = 'selection-mode-controls';
+            
+            // Add it to the section header
+            const sectionHeader = document.querySelector('.suggested-workouts .section-header');
+            if (sectionHeader) {
+                sectionHeader.appendChild(controlsContainer);
+            }
+        }
+        
+        // Update the controls content
+        controlsContainer.innerHTML = `
+            <div class="selection-count">${selectedWorkouts.size} selected</div>
+            <div class="selection-actions">
+                <button class="selection-button share-selection-button" id="shareSelectedWorkouts" ${selectedWorkouts.size === 0 ? 'disabled' : ''}>
+                    <span class="material-icons">share</span> Share
+                </button>
+            </div>
+        `;
+        
+        // Add event listener for share button
+        const shareButton = document.getElementById('shareSelectedWorkouts');
+        if (shareButton) {
+            shareButton.addEventListener('click', shareSelectedWorkouts);
+        }
+    } else if (controlsContainer) {
+        // Remove controls when not in selection mode
+        controlsContainer.remove();
+    }
 }
