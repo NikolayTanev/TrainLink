@@ -3,7 +3,7 @@ name: Deploy GitHub Pages
 on:
   push:
     branches:
-      - master  # Updated to match your default branch
+      - master
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build-and-deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -25,15 +25,28 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        
+      
       - name: Setup Pages
         uses: actions/configure-pages@v3
-        
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+      
+      - name: List directories for debugging
+        run: |
+          echo "Repository contents:"
+          ls -la
+          echo "TrainLink contents:"
+          ls -la TrainLink
+      
+      - name: Build with Jekyll
+        uses: actions/jekyll-build-pages@v1
         with:
-          path: 'TrainLink'
-          
+          source: ./TrainLink
+          destination: ./_site
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: ./_site
+      
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v2 
