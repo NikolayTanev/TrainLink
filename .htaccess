@@ -4,24 +4,23 @@
 
 RewriteEngine On
 
-# Handle clean URLs for major pages
+# Handle SPA routes
 RewriteRule ^app$ pages/app.html [L]
 RewriteRule ^login$ pages/login.html [L]
-RewriteRule ^register$ pages/register.html [L] 
+RewriteRule ^register$ pages/register.html [L]
 RewriteRule ^profile$ pages/profile.html [L]
-RewriteRule ^privacy$ pages/privacy-policy.html [L]
-RewriteRule ^terms$ pages/terms-of-service.html [L]
 RewriteRule ^stats$ pages/stats.html [L]
 RewriteRule ^devices$ pages/devices.html [L]
+RewriteRule ^privacy$ pages/privacy-policy.html [L]
+RewriteRule ^terms$ pages/terms-of-service.html [L]
 RewriteRule ^shared-workout$ pages/shared-workout.html [L]
-RewriteRule ^shared-workout/(.*)$ pages/shared-workout.html?$1 [L,QSA]
 
 # If an existing asset or directory is requested go to it as it is
 RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f [OR]
 RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -d
 RewriteRule ^ - [L]
 
-# If the requested resource doesn't exist, use index.html
+# Otherwise redirect to the index.html
 RewriteRule ^ index.html
 
 # Set HTTP headers for enhanced security and caching

@@ -13,124 +13,101 @@
     <!-- Styles -->
     <link rel="stylesheet" href="assets/css/styles.css">
     <style>
+        /* Just some basic styling for the error page */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
-            min-height: 100vh;
+            align-items: center;
+            height: 100vh;
             margin: 0;
             padding: 20px;
-            background-color: #121212;
-            color: #f5f5f5;
             text-align: center;
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         }
-        
+        .error-container {
+            max-width: 600px;
+        }
         h1 {
             font-family: 'Bebas Neue', sans-serif;
             font-size: 72px;
-            margin-bottom: 0;
             color: #4CAF50;
+            margin-bottom: 0;
         }
-        
-        h2 {
-            font-size: 24px;
-            font-weight: 400;
-            margin-top: 0;
-            margin-bottom: 30px;
-        }
-        
-        p {
-            font-size: 18px;
-            max-width: 600px;
-            margin: 0 auto 20px;
-            line-height: 1.6;
-        }
-        
-        .error-container {
-            padding: 40px;
-            border-radius: 10px;
-            background-color: rgba(26, 26, 26, 0.9);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            margin-bottom: 40px;
-        }
-        
-        .cta-button {
+        .btn {
             display: inline-block;
             background-color: #4CAF50;
             color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 10px;
             font-family: 'Bebas Neue', sans-serif;
             font-size: 18px;
-            padding: 12px 30px;
-            border-radius: 4px;
-            text-decoration: none;
-            margin-top: 20px;
-            letter-spacing: 1px;
-            transition: background-color 0.2s, transform 0.2s;
         }
-        
-        .cta-button:hover {
-            background-color: #3d8b40;
-            transform: translateY(-2px);
+        .btn:hover {
+            background-color: #45a049;
         }
-        
-        .material-icons {
-            font-size: 100px;
-            color: #4CAF50;
-            margin-bottom: 20px;
-        }
-        
-        .suggested-links {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 30px;
-        }
-        
-        .suggested-links a {
-            color: #4CAF50;
-            text-decoration: none;
-            padding: 8px 16px;
-            border: 1px solid #4CAF50;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-        }
-        
-        .suggested-links a:hover {
-            background-color: rgba(76, 175, 80, 0.1);
+        .redirect-message {
+            display: none;
+            margin: 20px 0;
+            font-style: italic;
         }
     </style>
-    <!-- Script to redirect if needed -->
     <script>
+        // This script detects which page was requested and redirects to the correct one
         document.addEventListener('DOMContentLoaded', function() {
+            // SPA route mapping
+            const routes = {
+                '/app': '/pages/app.html',
+                '/login': '/pages/login.html',
+                '/register': '/pages/register.html',
+                '/profile': '/pages/profile.html',
+                '/stats': '/pages/stats.html',
+                '/devices': '/pages/devices.html',
+                '/privacy': '/pages/privacy-policy.html',
+                '/terms': '/pages/terms-of-service.html',
+                '/shared-workout': '/pages/shared-workout.html'
+            };
+            
             // Get the current path
             const path = window.location.pathname;
             
-            // If we're in the pages directory and have a 404, redirect to root 404
-            if (path.includes('/pages/') && path.includes('404')) {
-                window.location.href = '/404.html';
+            // Check if the path matches any of our SPA routes
+            for (const route in routes) {
+                if (path === route || path.startsWith(route + '/')) {
+                    // Show the redirect message
+                    document.getElementById('redirect-message').style.display = 'block';
+                    
+                    // Redirect to the correct page
+                    const targetRoute = routes[route];
+                    setTimeout(function() {
+                        window.location.href = targetRoute;
+                    }, 1000);
+                    return;
+                }
             }
         });
     </script>
 </head>
 <body>
     <div class="error-container">
-        <span class="material-icons">error_outline</span>
         <h1>404</h1>
-        <h2>Page Not Found</h2>
-        <p>The page you are looking for doesn't exist or has been moved.</p>
-        <p>Please check the URL or navigate back to the main site.</p>
+        <h2>PAGE NOT FOUND</h2>
         
-        <div class="suggested-links">
-            <a href="/">Home</a>
-            <a href="/app">Dashboard</a>
-            <a href="/login">Login</a>
-            <a href="/register">Register</a>
+        <p>THE PAGE YOU ARE LOOKING FOR DOESN'T EXIST OR HAS BEEN MOVED.</p>
+        <p>PLEASE CHECK THE URL OR NAVIGATE BACK TO THE MAIN SITE.</p>
+        
+        <p id="redirect-message" class="redirect-message">Redirecting you to the requested page...</p>
+        
+        <div class="buttons">
+            <a href="/" class="btn">HOME</a>
+            <a href="/pages/app.html" class="btn">DASHBOARD</a>
+            <a href="/pages/login.html" class="btn">LOGIN</a>
+            <a href="/pages/register.html" class="btn">REGISTER</a>
         </div>
-        
-        <a href="/" class="cta-button">Go to Homepage</a>
     </div>
 </body>
 </html> 

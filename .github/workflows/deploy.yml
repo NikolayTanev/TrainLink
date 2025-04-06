@@ -13,13 +13,15 @@ permissions:
   contents: write
   pages: write
 
-# Allow only one concurrent deployment
+# Allow only one concurrent deployment, canceling any in-progress
 concurrency:
-  group: "pages"
+  group: "github-pages"
   cancel-in-progress: true
 
 jobs:
   deploy:
+    # Prevent duplicates by adding a unique ID to this job
+    name: Deploy to GitHub Pages
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
