@@ -4,109 +4,149 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Page Not Found - TrainLink</title>
-    <!-- Favicon -->
-    <link rel="icon" href="assets/images/Logo.png" type="image/png">
-    <link rel="apple-touch-icon" href="assets/images/Logo.png">
-    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!-- Styles -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap">
     <link rel="stylesheet" href="assets/css/styles.css">
     <style>
-        /* Just some basic styling for the error page */
         body {
+            font-family: var(--font-body, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        
+        .error-container {
+            flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            padding: 20px;
+            padding: 2rem;
             text-align: center;
-            background-color: #121212;
-            color: #e0e0e0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-        }
-        .error-container {
             max-width: 600px;
+            margin: 0 auto;
         }
+        
         h1 {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 72px;
+            font-size: 6rem;
+            margin-bottom: 1rem;
             color: #4CAF50;
-            margin-bottom: 0;
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 2px;
         }
-        .btn {
-            display: inline-block;
+        
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 30px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s;
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 1px;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+        }
+        
+        .button.primary {
             background-color: #4CAF50;
             color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 4px;
-            margin: 10px;
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 18px;
+            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
         }
-        .btn:hover {
-            background-color: #45a049;
+        
+        .button.primary:hover {
+            background-color: #3e8e41;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(76, 175, 80, 0.4);
         }
-        .redirect-message {
-            display: none;
-            margin: 20px 0;
-            font-style: italic;
+        
+        .button.secondary {
+            background-color: transparent;
+            color: #e0e0e0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .button.secondary:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
         }
     </style>
     <script>
-        // This script detects which page was requested and redirects to the correct one
+        // This script handles SPA-like routing for GitHub Pages
         document.addEventListener('DOMContentLoaded', function() {
-            // SPA route mapping
+            // Get the path from the URL
+            const path = window.location.pathname;
+            console.log('404 handler: Path is', path);
+            
+            // Check if this is a special route
+            if (path.includes('/shared-workout')) {
+                // Extract query parameters
+                const query = window.location.search;
+                
+                // Redirect to the actual page
+                window.location.href = '/pages/shared-workout.html' + query;
+                return;
+            }
+            
+            // Map of clean routes to actual html files
             const routes = {
                 '/app': '/pages/app.html',
                 '/login': '/pages/login.html',
                 '/register': '/pages/register.html',
                 '/profile': '/pages/profile.html',
                 '/stats': '/pages/stats.html',
-                '/devices': '/pages/devices.html',
                 '/privacy': '/pages/privacy-policy.html',
-                '/terms': '/pages/terms-of-service.html',
-                '/shared-workout': '/pages/shared-workout.html'
+                '/terms': '/pages/terms-of-service.html'
             };
             
-            // Get the current path
-            const path = window.location.pathname;
-            
-            // Check if the path matches any of our SPA routes
+            // Check if the path matches a known route
             for (const route in routes) {
-                if (path === route || path.startsWith(route + '/')) {
-                    // Show the redirect message
-                    document.getElementById('redirect-message').style.display = 'block';
-                    
-                    // Redirect to the correct page
-                    const targetRoute = routes[route];
-                    setTimeout(function() {
-                        window.location.href = targetRoute;
-                    }, 1000);
+                if (path === route || path === route + '/') {
+                    window.location.href = routes[route];
                     return;
                 }
             }
+            
+            // If we get here, it's a true 404, so show the 404 page
+            document.getElementById('error-page').style.display = 'block';
         });
     </script>
 </head>
 <body>
-    <div class="error-container">
+    <div id="error-page" class="error-container" style="display: none;">
         <h1>404</h1>
-        <h2>PAGE NOT FOUND</h2>
-        
-        <p>THE PAGE YOU ARE LOOKING FOR DOESN'T EXIST OR HAS BEEN MOVED.</p>
-        <p>PLEASE CHECK THE URL OR NAVIGATE BACK TO THE MAIN SITE.</p>
-        
-        <p id="redirect-message" class="redirect-message">Redirecting you to the requested page...</p>
-        
+        <h2>Page Not Found</h2>
+        <p>The page you're looking for doesn't exist or has been moved. Please check the URL or navigate back to the home page.</p>
         <div class="buttons">
-            <a href="/" class="btn">HOME</a>
-            <a href="/pages/app.html" class="btn">DASHBOARD</a>
-            <a href="/pages/login.html" class="btn">LOGIN</a>
-            <a href="/pages/register.html" class="btn">REGISTER</a>
+            <a href="/" class="button primary">Go to Homepage</a>
+            <a href="javascript:history.back()" class="button secondary">Go Back</a>
         </div>
     </div>
 </body>
