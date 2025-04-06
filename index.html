@@ -285,5 +285,42 @@
             </div>
         </div>
     </footer>
+
+    <!-- Add this routing script right before the closing body tag -->
+    <script>
+      // Simple router to handle clean URLs
+      document.addEventListener('DOMContentLoaded', function() {
+        // Handle all app navigation links to use clean URLs without page reload
+        document.querySelectorAll('a[href^="/"]').forEach(function(link) {
+          link.addEventListener('click', function(e) {
+            const href = this.getAttribute('href');
+            
+            // Skip external links or non-app links
+            if (href.startsWith('http') || href.startsWith('#') || href === '/') {
+              return; // Let the browser handle these
+            }
+            
+            // Map routes to their HTML files
+            const routes = {
+              '/app': '/pages/app.html',
+              '/login': '/pages/login.html',
+              '/register': '/pages/register.html',
+              '/profile': '/pages/profile.html',
+              '/stats': '/pages/stats.html',
+              '/devices': '/pages/devices.html',
+              '/privacy': '/pages/privacy-policy.html',
+              '/terms': '/pages/terms-of-service.html',
+              '/shared-workout': '/pages/shared-workout.html'
+            };
+            
+            // If it's a known route, handle it
+            if (routes[href]) {
+              e.preventDefault();
+              window.location.href = routes[href];
+            }
+          });
+        });
+      });
+    </script>
 </body>
 </html> 

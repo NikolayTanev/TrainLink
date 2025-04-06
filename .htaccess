@@ -4,7 +4,7 @@
 
 RewriteEngine On
 
-# Handle SPA routes
+# Rewrite rules to handle clean URLs
 RewriteRule ^app$ pages/app.html [L]
 RewriteRule ^login$ pages/login.html [L]
 RewriteRule ^register$ pages/register.html [L]
@@ -15,13 +15,11 @@ RewriteRule ^privacy$ pages/privacy-policy.html [L]
 RewriteRule ^terms$ pages/terms-of-service.html [L]
 RewriteRule ^shared-workout$ pages/shared-workout.html [L]
 
-# If an existing asset or directory is requested go to it as it is
-RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f [OR]
-RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -d
-RewriteRule ^ - [L]
-
-# Otherwise redirect to the index.html
-RewriteRule ^ index.html
+# HTML5 pushstate (history) support:
+# If the requested resource doesn't exist, route it to index.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]
 
 # Set HTTP headers for enhanced security and caching
 <IfModule mod_headers.c>
