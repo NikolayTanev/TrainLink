@@ -1,15 +1,84 @@
 # Site settings
 title: TrainLink
 description: Smart Workout Tracking & Scheduling
-url: https://trainlink.eu
 baseurl: ""
+url: "https://trainlink.eu"
 
-# GitHub Pages settings
+# Clean URLs with Jekyll
 permalink: pretty
-include: [".htaccess", "_headers", "_redirects", ".nojekyll"]
-exclude: ["netlify.toml", "firebase-security-rules.txt"]
+
+# Files to include and process
+include:
+  - .htaccess
+  - _redirects
+  - CNAME
+
+# GitHub Pages 404 handling
+plugins:
+  - jekyll-redirect-from
+
+# Handle SPA route redirects
+defaults:
+  -
+    scope:
+      path: ""
+    values:
+      layout: "default"
+  -
+    scope:
+      path: "app"
+    values:
+      permalink: /app/
+      redirect_to: /pages/app.html
+  -
+    scope:
+      path: "login"
+    values:
+      permalink: /login/
+      redirect_to: /pages/login.html
+  -
+    scope:
+      path: "register"
+    values:
+      permalink: /register/
+      redirect_to: /pages/register.html
+  -
+    scope:
+      path: "profile"
+    values:
+      permalink: /profile/
+      redirect_to: /pages/profile.html
+  -
+    scope:
+      path: "stats"
+    values:
+      permalink: /stats/
+      redirect_to: /pages/stats.html
+  -
+    scope:
+      path: "devices"
+    values:
+      permalink: /devices/
+      redirect_to: /pages/devices.html
+  -
+    scope:
+      path: "privacy"
+    values:
+      permalink: /privacy/
+      redirect_to: /pages/privacy-policy.html
+  -
+    scope:
+      path: "terms"
+    values:
+      permalink: /terms/
+      redirect_to: /pages/terms-of-service.html
+  -
+    scope:
+      path: "shared-workout"
+    values:
+      permalink: /shared-workout/
+      redirect_to: /pages/shared-workout.html
 
 # Build settings
 markdown: kramdown
-plugins:
-  - jekyll-redirect-from 
+exclude: ["netlify.toml", "firebase-security-rules.txt"] 

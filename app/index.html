@@ -1,0 +1,43 @@
+---
+permalink: /app/
+redirect_to: /pages/app.html
+---
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Redirecting...</title>
+  <link rel="canonical" href="{{ site.url }}/pages/app.html">
+  <meta http-equiv="refresh" content="0; url={{ site.url }}/pages/app.html">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      text-align: center;
+      padding-top: 100px;
+      background-color: #121212;
+      color: #e0e0e0;
+    }
+    .loader {
+      border: 5px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 5px solid #4CAF50;
+      width: 50px;
+      height: 50px;
+      margin: 20px auto;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+  <script>
+    window.location.href = "/pages/app.html";
+  </script>
+</head>
+<body>
+  <h1>Redirecting to Dashboard...</h1>
+  <div class="loader"></div>
+  <p>If you are not redirected automatically, <a href="/pages/app.html">click here</a>.</p>
+</body>
+</html> 
