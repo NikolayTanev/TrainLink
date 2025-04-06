@@ -125,7 +125,7 @@ async function loadWorkouts() {
                     }
                     
                     // Add video information if videoUrl exists but video object doesn't
-                    if (workout.videoUrl && !workout.video) {
+                    if (workout.videoUrl && (!workout.video || !workout.video.thumbnail)) {
                         const videoId = getYoutubeVideoId(workout.videoUrl);
                         workout.video = {
                             type: 'youtube',
@@ -133,6 +133,7 @@ async function loadWorkouts() {
                             title: workout.videoTitle || workout.title,
                             thumbnail: videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null
                         };
+                        console.log('Added video data to workout:', workout.title);
                     }
                     return workout;
                 });
@@ -562,6 +563,7 @@ function renderWorkoutCards() {
         card.dataset.id = workout.id;
         
         let thumbnailHtml = '';
+        // Check for video thumbnail or generate from videoUrl if not present
         if (workout.video && workout.video.thumbnail) {
             thumbnailHtml = `
                 <div class="workout-thumbnail" style="background-image: url('${workout.video.thumbnail}')">
@@ -570,16 +572,35 @@ function renderWorkoutCards() {
                     </div>
                 </div>
             `;
+        } else if (workout.videoUrl) {
+            // Try to generate thumbnail from videoUrl
+            const videoId = getYoutubeVideoId(workout.videoUrl);
+            if (videoId) {
+                const thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                thumbnailHtml = `
+                    <div class="workout-thumbnail" style="background-image: url('${thumbnail}')">
+                        <div class="play-overlay">
+                            <span class="material-icons">play_circle</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                thumbnailHtml = `
+                    <div class="workout-icon">
+                        <span class="material-icons">${workout.icon || 'fitness_center'}</span>
+                    </div>
+                `;
+            }
         } else {
             thumbnailHtml = `
                 <div class="workout-icon">
-                    <span class="material-icons">${workout.icon}</span>
+                    <span class="material-icons">${workout.icon || 'fitness_center'}</span>
                 </div>
             `;
         }
         
         let videoIndicator = '';
-        if (workout.video) {
+        if (workout.video && workout.video.url || workout.videoUrl) {
             videoIndicator = `
                 <div class="video-indicator">
                     <span class="material-icons">play_circle</span>
@@ -2355,9 +2376,15 @@ function expandWorkout(workoutId, workoutData = null) {
     
     // Get the video URL
     let videoHtml = '';
-    if (workout.videoUrl) {
-        console.log(`Loading video from URL: ${workout.videoUrl}`);
-        const embedUrl = getYoutubeEmbedUrl(workout.videoUrl);
+    // Check all possible sources for video URL
+    let videoUrl = workout.videoUrl;
+    if (!videoUrl && workout.video && workout.video.url) {
+        videoUrl = workout.video.url;
+    }
+
+    if (videoUrl) {
+        console.log(`Loading video from URL: ${videoUrl}`);
+        const embedUrl = getYoutubeEmbedUrl(videoUrl);
         
         if (embedUrl) {
             videoHtml = `
@@ -2377,7 +2404,7 @@ function expandWorkout(workoutId, workoutData = null) {
             videoHtml = `
                 <div class="video-player">
                     <video id="videoPlayer" controls>
-                        <source src="${workout.videoUrl}" type="video/mp4">
+                        <source src="${videoUrl}" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
                 </div>

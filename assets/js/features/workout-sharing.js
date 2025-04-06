@@ -65,9 +65,17 @@ export async function generateSharingCode(workoutId, isRoutine = false, routineW
 export function getSharingUrl(shareCode) {
     console.log('Creating sharing URL for code:', shareCode);
     
-    // Basic URL with no routing complexity - simple and reliable
+    // Handle both local development and production environments
     const baseUrl = window.location.origin;
-    const shareUrl = `${baseUrl}/pages/shared-workout.html?code=${shareCode}`;
+    
+    // Check if we're in a development environment (localhost or 127.0.0.1)
+    const isDevelopment = baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1');
+    
+    // In development we need the /TrainLink/ prefix, in production we don't
+    const sharePath = isDevelopment ? '/TrainLink/pages/shared-workout.html' : '/pages/shared-workout.html';
+    
+    const shareUrl = `${baseUrl}${sharePath}?code=${shareCode}`;
+    console.log('Generated share URL:', shareUrl);
     
     return shareUrl;
 }
@@ -146,15 +154,191 @@ export async function getSharedWorkoutData(shareCode) {
  */
 export async function importSharedWorkout(shareCode) {
     try {
-        // TODO: Implement this function to import shared workouts
         console.log('Importing shared workout:', shareCode);
         
-        // This would involve:
-        // 1. Getting the shared workout data
-        // 2. Retrieving workout details from Firestore
-        // 3. Adding them to the current user's workouts
+        const user = auth.currentUser;
+        if (!user) {
+            console.error('User not logged in');
+            throw new Error('User must be logged in to import workouts');
+        }
         
-        throw new Error('Import shared workout not yet implemented');
+        console.log('User is logged in:', user.uid);
+        
+        // 1. Get the shared workout data
+        console.log('Fetching shared workout data...');
+        const shareData = await getSharedWorkoutData(shareCode);
+        
+        if (!shareData) {
+            console.error('No share data found');
+            throw new Error('Shared workout not found');
+        }
+        
+        console.log('Share data retrieved:', shareData);
+        
+        const importedItems = [];
+        const missingWorkouts = [];
+        
+        // 2. Import based on whether it's a routine or single workout
+        if (shareData.isRoutine) {
+            console.log('Importing routine with workouts:', shareData.routineWorkouts);
+            // Handle routine (multiple workouts)
+            if (!shareData.routineWorkouts || shareData.routineWorkouts.length === 0) {
+                console.error('Routine has no workouts');
+                throw new Error('No workouts found in this routine');
+            }
+            
+            for (const workoutId of shareData.routineWorkouts) {
+                try {
+                    console.log('Importing workout ID:', workoutId);
+                    // First try to get from workouts collection
+                    const workoutsRef = collection(db, 'workouts');
+                    const q = query(workoutsRef, where("workoutId", "==", workoutId));
+                    console.log('Executing query for workout');
+                    let querySnapshot = await getDocs(q);
+                    
+                    // If not found, try searching by originalWorkoutId
+                    if (querySnapshot.empty) {
+                        console.log('Workout not found by workoutId, trying originalWorkoutId');
+                        const q2 = query(workoutsRef, where("originalWorkoutId", "==", workoutId));
+                        querySnapshot = await getDocs(q2);
+                    }
+                    
+                    // If still not found, try scheduledWorkouts collection
+                    if (querySnapshot.empty) {
+                        console.log('Workout not found in workouts collection, trying scheduledWorkouts');
+                        const scheduledWorkoutsRef = collection(db, 'scheduledWorkouts');
+                        const q3 = query(scheduledWorkoutsRef, where("workoutId", "==", workoutId));
+                        querySnapshot = await getDocs(q3);
+                        
+                        if (querySnapshot.empty) {
+                            const q4 = query(scheduledWorkoutsRef, where("originalWorkoutId", "==", workoutId));
+                            querySnapshot = await getDocs(q4);
+                        }
+                    }
+                    
+                    if (!querySnapshot.empty) {
+                        console.log('Workout found, creating copy');
+                        const workoutData = querySnapshot.docs[0].data();
+                        
+                        // Normalize workout data (handle differences between collections)
+                        const normalizedWorkout = normalizeWorkoutData(workoutData, workoutId);
+                        
+                        // Create a new copy for the current user
+                        const newWorkout = {
+                            ...normalizedWorkout,
+                            userId: user.uid,
+                            importedFrom: shareCode,
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        };
+                        
+                        // Remove the original ID to get a new one
+                        delete newWorkout.id;
+                        
+                        // Save to Firestore
+                        console.log('Saving workout to Firestore');
+                        const newWorkoutRef = await addDoc(collection(db, 'workouts'), newWorkout);
+                        
+                        // Add imported workout to the list
+                        importedItems.push({
+                            id: newWorkoutRef.id,
+                            title: workoutData.title
+                        });
+                        console.log('Workout imported successfully');
+                    } else {
+                        console.error('Workout not found in database:', workoutId);
+                        missingWorkouts.push(workoutId);
+                    }
+                } catch (error) {
+                    console.error(`Error importing workout ${workoutId}:`, error);
+                    missingWorkouts.push(workoutId);
+                }
+            }
+            
+            // For routines, we'll continue even if some workouts are missing
+            if (importedItems.length === 0 && missingWorkouts.length > 0) {
+                console.error('None of the workouts in the routine could be imported');
+                throw new Error('No workouts could be imported from this routine');
+            } else if (missingWorkouts.length > 0) {
+                console.warn(`${missingWorkouts.length} workout(s) could not be imported from the routine`);
+            }
+            
+        } else {
+            // Handle single workout
+            if (shareData.workoutId) {
+                console.log('Importing single workout:', shareData.workoutId);
+                try {
+                    // First try to get from workouts collection
+                    const workoutsRef = collection(db, 'workouts');
+                    const q = query(workoutsRef, where("workoutId", "==", shareData.workoutId));
+                    console.log('Executing query for workout');
+                    let querySnapshot = await getDocs(q);
+                    
+                    // If not found, try searching by originalWorkoutId
+                    if (querySnapshot.empty) {
+                        console.log('Workout not found by workoutId, trying originalWorkoutId');
+                        const q2 = query(workoutsRef, where("originalWorkoutId", "==", shareData.workoutId));
+                        querySnapshot = await getDocs(q2);
+                    }
+                    
+                    // If still not found, try scheduledWorkouts collection
+                    if (querySnapshot.empty) {
+                        console.log('Workout not found in workouts collection, trying scheduledWorkouts');
+                        const scheduledWorkoutsRef = collection(db, 'scheduledWorkouts');
+                        const q3 = query(scheduledWorkoutsRef, where("workoutId", "==", shareData.workoutId));
+                        querySnapshot = await getDocs(q3);
+                        
+                        if (querySnapshot.empty) {
+                            const q4 = query(scheduledWorkoutsRef, where("originalWorkoutId", "==", shareData.workoutId));
+                            querySnapshot = await getDocs(q4);
+                        }
+                    }
+                    
+                    if (!querySnapshot.empty) {
+                        console.log('Workout found, creating copy');
+                        const workoutData = querySnapshot.docs[0].data();
+                        
+                        // Normalize workout data (handle differences between collections)
+                        const normalizedWorkout = normalizeWorkoutData(workoutData, shareData.workoutId);
+                        
+                        // Create a new copy for the current user
+                        const newWorkout = {
+                            ...normalizedWorkout,
+                            userId: user.uid,
+                            importedFrom: shareCode,
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        };
+                        
+                        // Remove the original ID to get a new one
+                        delete newWorkout.id;
+                        
+                        // Save to Firestore
+                        console.log('Saving workout to Firestore');
+                        const newWorkoutRef = await addDoc(collection(db, 'workouts'), newWorkout);
+                        
+                        // Add imported workout to the list
+                        importedItems.push({
+                            id: newWorkoutRef.id,
+                            title: workoutData.title
+                        });
+                        console.log('Workout imported successfully');
+                    } else {
+                        console.error('Workout not found in database:', shareData.workoutId);
+                        throw new Error(`Workout with ID ${shareData.workoutId} not found`);
+                    }
+                } catch (error) {
+                    console.error(`Error importing workout ${shareData.workoutId}:`, error);
+                    throw error; // Re-throw for single workout import
+                }
+            } else {
+                console.error('No workout ID found in share data');
+                throw new Error('No workout ID found in share data');
+            }
+        }
+        
+        console.log('Successfully imported workouts:', importedItems);
+        return importedItems;
     } catch (error) {
         console.error('Error importing shared workout:', error);
         throw error;
@@ -301,4 +485,93 @@ export function showShareWorkoutDialog(workoutId, isRoutine = false, routineWork
         console.error('Critical error in showShareWorkoutDialog:', error);
         alert('Sorry, there was a problem showing the share dialog. Please try again later.');
     }
+}
+
+/**
+ * Extract YouTube video ID from a URL
+ * @param {string} url - The YouTube URL
+ * @returns {string|null} - The video ID or null if not a valid YouTube URL
+ */
+function extractYoutubeVideoId(url) {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+}
+
+/**
+ * Normalize workout data from different collections into a standard format
+ * @param {Object} workoutData - Raw workout data from any collection
+ * @param {string} workoutId - Original workoutId to ensure it's preserved
+ * @returns {Object} - Normalized workout data ready for import
+ */
+function normalizeWorkoutData(workoutData, workoutId) {
+    console.log('Normalizing workout data:', workoutData);
+    
+    // Handle video data regardless of source format
+    let videoUrl = null;
+    let videoTitle = null;
+    let thumbnailUrl = null;
+    
+    // Check all possible locations for video data
+    if (workoutData.video && typeof workoutData.video === 'object') {
+        videoUrl = workoutData.video.url || null;
+        videoTitle = workoutData.video.title || null;
+        thumbnailUrl = workoutData.video.thumbnail || null;
+    }
+    
+    // Also check for direct fields
+    videoUrl = workoutData.videoUrl || videoUrl;
+    videoTitle = workoutData.videoTitle || videoTitle;
+    thumbnailUrl = workoutData.thumbnailUrl || thumbnailUrl;
+    
+    // Process YouTube URL to generate thumbnail if not already provided
+    if (videoUrl && !thumbnailUrl) {
+        const videoId = extractYoutubeVideoId(videoUrl);
+        if (videoId) {
+            thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+            console.log('Generated YouTube thumbnail:', thumbnailUrl);
+        }
+    }
+    
+    console.log('Extracted video data:', { videoUrl, videoTitle, thumbnailUrl });
+    
+    // Create a base workout object with required fields - make exact copy of original
+    const normalizedWorkout = {
+        // First include all original properties from source workout
+        ...workoutData,
+        
+        // Then override key properties as needed
+        title: workoutData.title || 'Unknown Workout',
+        description: workoutData.description || '', // Keep original description exactly as is
+        duration: workoutData.duration || '',       // Keep original duration exactly as is
+        difficulty: workoutData.difficulty || '',   // Keep original difficulty exactly as is
+        workoutId: workoutId, // Ensure we preserve the original ID
+        
+        // Store video data in multiple formats to ensure compatibility
+        video: {
+            url: videoUrl,
+            title: videoTitle,
+            thumbnail: thumbnailUrl,
+            type: 'youtube' // Specify the video type
+        },
+        videoUrl: videoUrl, 
+        videoTitle: videoTitle,
+        thumbnailUrl: thumbnailUrl,
+        
+        // Original metadata
+        originalWorkoutId: workoutData.originalWorkoutId || workoutId,
+        originalFirebaseId: workoutData.originalFirebaseId || null,
+        
+        // Add import timestamp
+        importedAt: new Date().toISOString()
+    };
+    
+    // Clean up the data
+    if (normalizedWorkout.exercises && !Array.isArray(normalizedWorkout.exercises)) {
+        normalizedWorkout.exercises = [];
+    }
+    
+    console.log('Normalized workout data:', normalizedWorkout);
+    return normalizedWorkout;
 } 
