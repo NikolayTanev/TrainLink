@@ -1,3 +1,15 @@
+# Site settings
+title: TrainLink
+description: Smart Workout Tracking & Scheduling
+url: https://trainlink.eu
+baseurl: ""
+
+# GitHub Pages settings
 permalink: pretty
-include: [".htaccess"]
-exclude: ["netlify.toml", "firebase-security-rules.txt", "components", "scripts"] 
+include: [".htaccess", "_headers", "_redirects", ".nojekyll"]
+exclude: ["netlify.toml", "firebase-security-rules.txt"]
+
+# Build settings
+markdown: kramdown
+plugins:
+  - jekyll-redirect-from 
