@@ -13,8 +13,10 @@ import {
 import { auth, db } from '../core/firebase-config.js';
 import { getCurrentUser } from '../core/firebase-config.js';
 
-// Collection name for shared workouts
+// Collection names
 const SHARED_WORKOUTS_COLLECTION = 'sharedWorkouts';
+const WORKOUTS_COLLECTION = 'workouts';
+const SCHEDULED_WORKOUTS_COLLECTION = 'scheduledWorkouts';
 
 /**
  * Generate a sharing code for a workout or routine
@@ -42,6 +44,39 @@ export async function generateSharingCode(workoutId, isRoutine = false, routineW
             accessCount: 0,
             lastAccessed: null
         };
+        
+        // Add full workout data to the share for better compatibility
+        if (!isRoutine && workoutId) {
+            // Try to get workout data to include directly in the share
+            try {
+                // Try different sources to find the workout
+                let workoutData = null;
+                
+                // Try using direct document ID first
+                const docRef = doc(db, WORKOUTS_COLLECTION, workoutId);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    workoutData = docSnap.data();
+                } else {
+                    // Try querying by workoutId field
+                    const workoutsRef = collection(db, WORKOUTS_COLLECTION);
+                    const q = query(workoutsRef, where("workoutId", "==", workoutId));
+                    const querySnapshot = await getDocs(q);
+                    
+                    if (!querySnapshot.empty) {
+                        workoutData = querySnapshot.docs[0].data();
+                    }
+                }
+                
+                if (workoutData) {
+                    console.log('Including full workout data in share');
+                    shareData.workoutData = workoutData;
+                }
+            } catch (error) {
+                console.error('Error fetching workout data for share:', error);
+                // Continue without workout data
+            }
+        }
 
         // Save to Firestore in sharedWorkouts collection
         const shareRef = await addDoc(collection(db, SHARED_WORKOUTS_COLLECTION), shareData);
@@ -175,6 +210,16 @@ export async function importSharedWorkout(shareCode) {
         
         console.log('Share data retrieved:', shareData);
         
+        // Check if the share data contains a complete workout definition
+        // This is a backup option if workout lookup fails
+        const hasEmbeddedWorkout = shareData.workoutData && 
+                                  typeof shareData.workoutData === 'object' && 
+                                  shareData.workoutData.title;
+        
+        if (hasEmbeddedWorkout) {
+            console.log('Share contains embedded workout data:', shareData.workoutData.title);
+        }
+        
         const importedItems = [];
         const missingWorkouts = [];
         
@@ -191,22 +236,45 @@ export async function importSharedWorkout(shareCode) {
                 try {
                     console.log('Importing workout ID:', workoutId);
                     // First try to get from workouts collection
-                    const workoutsRef = collection(db, 'workouts');
+                    const workoutsRef = collection(db, WORKOUTS_COLLECTION);
+                    
+                    // 1. First try workoutId field
                     const q = query(workoutsRef, where("workoutId", "==", workoutId));
-                    console.log('Executing query for workout');
+                    console.log('Executing query for workout by workoutId');
                     let querySnapshot = await getDocs(q);
                     
-                    // If not found, try searching by originalWorkoutId
+                    // 2. If not found, try searching by originalWorkoutId
                     if (querySnapshot.empty) {
                         console.log('Workout not found by workoutId, trying originalWorkoutId');
                         const q2 = query(workoutsRef, where("originalWorkoutId", "==", workoutId));
                         querySnapshot = await getDocs(q2);
                     }
                     
-                    // If still not found, try scheduledWorkouts collection
+                    // 3. If still not found, try direct document ID
+                    if (querySnapshot.empty) {
+                        console.log('Workout not found by fields, trying direct document ID');
+                        try {
+                            const docRef = doc(db, WORKOUTS_COLLECTION, workoutId);
+                            const docSnap = await getDoc(docRef);
+                            if (docSnap.exists()) {
+                                // Create a synthetic querySnapshot similar to getDocs result
+                                querySnapshot = {
+                                    empty: false,
+                                    docs: [{ 
+                                        data: () => ({ ...docSnap.data(), id: docSnap.id })
+                                    }]
+                                };
+                                console.log('Found workout by document ID');
+                            }
+                        } catch (e) {
+                            console.error('Error trying document ID approach:', e);
+                        }
+                    }
+                    
+                    // 4. If still not found, try scheduledWorkouts collection
                     if (querySnapshot.empty) {
                         console.log('Workout not found in workouts collection, trying scheduledWorkouts');
-                        const scheduledWorkoutsRef = collection(db, 'scheduledWorkouts');
+                        const scheduledWorkoutsRef = collection(db, SCHEDULED_WORKOUTS_COLLECTION);
                         const q3 = query(scheduledWorkoutsRef, where("workoutId", "==", workoutId));
                         querySnapshot = await getDocs(q3);
                         
@@ -214,6 +282,18 @@ export async function importSharedWorkout(shareCode) {
                             const q4 = query(scheduledWorkoutsRef, where("originalWorkoutId", "==", workoutId));
                             querySnapshot = await getDocs(q4);
                         }
+                    }
+                    
+                    // 5. If still nothing found but we have embedded data, use that
+                    if (querySnapshot.empty && hasEmbeddedWorkout) {
+                        console.log('Using embedded workout data as fallback');
+                        // Create a synthetic querySnapshot
+                        querySnapshot = {
+                            empty: false,
+                            docs: [{ 
+                                data: () => ({ ...shareData.workoutData, id: workoutId })
+                            }]
+                        };
                     }
                     
                     if (!querySnapshot.empty) {
@@ -237,7 +317,7 @@ export async function importSharedWorkout(shareCode) {
                         
                         // Save to Firestore
                         console.log('Saving workout to Firestore');
-                        const newWorkoutRef = await addDoc(collection(db, 'workouts'), newWorkout);
+                        const newWorkoutRef = await addDoc(collection(db, WORKOUTS_COLLECTION), newWorkout);
                         
                         // Add imported workout to the list
                         importedItems.push({
@@ -269,22 +349,45 @@ export async function importSharedWorkout(shareCode) {
                 console.log('Importing single workout:', shareData.workoutId);
                 try {
                     // First try to get from workouts collection
-                    const workoutsRef = collection(db, 'workouts');
+                    const workoutsRef = collection(db, WORKOUTS_COLLECTION);
+                    
+                    // 1. First try workoutId field
                     const q = query(workoutsRef, where("workoutId", "==", shareData.workoutId));
-                    console.log('Executing query for workout');
+                    console.log('Executing query for workout by workoutId');
                     let querySnapshot = await getDocs(q);
                     
-                    // If not found, try searching by originalWorkoutId
+                    // 2. If not found, try searching by originalWorkoutId
                     if (querySnapshot.empty) {
                         console.log('Workout not found by workoutId, trying originalWorkoutId');
                         const q2 = query(workoutsRef, where("originalWorkoutId", "==", shareData.workoutId));
                         querySnapshot = await getDocs(q2);
                     }
                     
-                    // If still not found, try scheduledWorkouts collection
+                    // 3. If still not found, try direct document ID
+                    if (querySnapshot.empty) {
+                        console.log('Workout not found by fields, trying direct document ID');
+                        try {
+                            const docRef = doc(db, WORKOUTS_COLLECTION, shareData.workoutId);
+                            const docSnap = await getDoc(docRef);
+                            if (docSnap.exists()) {
+                                // Create a synthetic querySnapshot similar to getDocs result
+                                querySnapshot = {
+                                    empty: false,
+                                    docs: [{ 
+                                        data: () => ({ ...docSnap.data(), id: docSnap.id })
+                                    }]
+                                };
+                                console.log('Found workout by document ID');
+                            }
+                        } catch (e) {
+                            console.error('Error trying document ID approach:', e);
+                        }
+                    }
+                    
+                    // 4. If still not found, try scheduledWorkouts collection
                     if (querySnapshot.empty) {
                         console.log('Workout not found in workouts collection, trying scheduledWorkouts');
-                        const scheduledWorkoutsRef = collection(db, 'scheduledWorkouts');
+                        const scheduledWorkoutsRef = collection(db, SCHEDULED_WORKOUTS_COLLECTION);
                         const q3 = query(scheduledWorkoutsRef, where("workoutId", "==", shareData.workoutId));
                         querySnapshot = await getDocs(q3);
                         
@@ -292,6 +395,18 @@ export async function importSharedWorkout(shareCode) {
                             const q4 = query(scheduledWorkoutsRef, where("originalWorkoutId", "==", shareData.workoutId));
                             querySnapshot = await getDocs(q4);
                         }
+                    }
+                    
+                    // 5. If still nothing found but we have embedded data, use that
+                    if (querySnapshot.empty && hasEmbeddedWorkout) {
+                        console.log('Using embedded workout data as fallback');
+                        // Create a synthetic querySnapshot
+                        querySnapshot = {
+                            empty: false,
+                            docs: [{ 
+                                data: () => ({ ...shareData.workoutData, id: shareData.workoutId })
+                            }]
+                        };
                     }
                     
                     if (!querySnapshot.empty) {
@@ -315,7 +430,7 @@ export async function importSharedWorkout(shareCode) {
                         
                         // Save to Firestore
                         console.log('Saving workout to Firestore');
-                        const newWorkoutRef = await addDoc(collection(db, 'workouts'), newWorkout);
+                        const newWorkoutRef = await addDoc(collection(db, WORKOUTS_COLLECTION), newWorkout);
                         
                         // Add imported workout to the list
                         importedItems.push({
