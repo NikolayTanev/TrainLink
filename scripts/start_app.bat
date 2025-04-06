@@ -1,3 +1,0 @@
-@echo off
-echo Starting TrainLink...
-start ..\pages\index.html
