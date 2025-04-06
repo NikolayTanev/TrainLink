@@ -1,0 +1,7 @@
+---
+permalink: pretty
+include: [".htaccess", "_headers", "_redirects", ".nojekyll"]
+name: TrainLink
+baseurl: ""
+url: "https://trainlink.eu"
+--- 
