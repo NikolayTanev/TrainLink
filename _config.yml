@@ -1,0 +1,3 @@
+permalink: pretty
+include: [".htaccess"]
+exclude: ["netlify.toml", "firebase-security-rules.txt", "components", "scripts"] 
