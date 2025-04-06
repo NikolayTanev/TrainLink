@@ -1,0 +1,111 @@
+TrainLink Enhancement Requirements
+Below are detailed specifications for three key feature enhancements to implement in the TrainLink workout application. These requirements are written to provide clear implementation guidance without requiring further clarification.
+1. Enhanced Upcoming Workout Management
+Requirement:
+Implement granular control for managing scheduled workouts, including individual deletion and rescheduling capabilities.
+Technical Specifications:
+A. Delete Functionality Enhancement
+Replace the current single delete button with a more versatile delete icon/button
+When clicked, display a modal with two clearly labeled options:
+"Delete this workout only" - Removes only the selected instance
+"Delete entire series" - Removes all recurring instances of this workout
+B. Add Reschedule Functionality
+Add a calendar/reschedule icon button next to each upcoming workout
+When clicked, open a date/time picker modal with:
+Date selection (calendar view)
+Time selection (hour/minute picker)
+"Reschedule" and "Cancel" buttons
+After rescheduling, all subsequent workouts in the series must be adjusted to maintain the same pattern (e.g., if weekly, maintain the same day of week but with new times)
+C. Implementation Details
+Update the deleteScheduledWorkout() function to accept a parameter indicating whether to delete a single instance or the entire series
+Create a new rescheduleWorkout(workoutId, oldDateTime, newDateTime, isRecurring) function
+Store a reference to the "parent" workout for recurring workouts to maintain relationships
+Update the localStorage data structure to support these new operations:
+2. User Accounts & Workout Sharing System
+Requirement:
+Implement a secure user account system with workout schedule sharing capabilities.
+Technical Specifications:
+A. User Authentication System
+Implement using Firebase Authentication (recommended for security and ease of implementation without database expertise)
+Required user fields:
+Email (for login)
+Password (min 8 characters, require numbers and special characters)
+Display name (for social features)
+Optional profile picture
+B. Data Storage
+Use Firebase Firestore for secure cloud storage (no need to set up your own database)
+Create the following collections:
+users: Store user profile information
+workouts: Store user-created workouts
+schedules: Store workout schedules with sharing permissions
+C. Workout Sharing
+Add "Share" button to workout schedules
+Implement sharing via:
+Unique URL with read-only access
+Email invitation (recipient must create account to view)
+Export as calendar file (.ics format)
+D. Privacy & Security Implementation
+Implement proper authentication state management
+Set up Firebase security rules to restrict data access:
+E. Implementation Steps
+Set up Firebase project (free tier is sufficient to start)
+Add Firebase SDK to the project
+Create login/signup UI components
+Modify existing localStorage functions to sync with Firebase when user is logged in
+Implement data migration from localStorage to Firebase when user creates account
+Add sharing UI and functionality
+3. Workout Progress Analytics & Visualization
+Requirement:
+Implement comprehensive workout analytics to help users track their fitness journey with visual representations of progress.
+Technical Specifications:
+A. Data Collection
+Track additional metrics for each completed workout:
+Perceived exertion rating (1-10 scale)
+Notes field for user comments
+Actual duration completed (vs. planned duration)
+Optional: heart rate data if available
+B. Analytics Dashboard
+Create a new "Progress" section in the app with:
+Weekly/monthly workout summary
+Streak calendar (similar to GitHub contribution graph)
+Workout type distribution chart (pie/donut chart)
+Time spent per workout category
+C. Visualization Components
+Implement using Chart.js (lightweight) or D3.js (more powerful but complex)
+Required charts:
+Line chart for workout frequency over time
+Bar chart for duration by workout type
+Calendar heatmap for consistency
+Progress towards custom goals
+D. Goal Setting Feature
+Allow users to set measurable goals:
+Number of workouts per week/month
+Total minutes of exercise per week
+Specific workout type targets
+Custom goals with target dates
+E. Implementation Details
+Create a new analytics.js file to handle data processing
+Extend the workout logging functionality to capture additional metrics
+Store analytics data in the following structure:
+F. Local Storage Fallback
+Implement analytics that work without requiring user accounts
+Store data in localStorage with option to migrate to cloud when user creates account
+Implementation Notes
+Security Considerations:
+Never store sensitive user data in localStorage
+Use HTTPS for all API communications
+Implement proper input validation for all user inputs
+Use Firebase Authentication for secure user management without needing database expertise
+Progressive Enhancement:
+Implement features to work with localStorage first, then add cloud sync
+Ensure core functionality works without requiring account creation
+Add clear benefits for creating accounts to encourage signups
+Performance Optimization:
+Lazy load the analytics components
+Implement proper pagination for workout history
+Use efficient data structures to minimize storage requirements
+Testing Requirements:
+Test all features on mobile, tablet, and desktop views
+Verify functionality works in offline mode with appropriate feedback
+Ensure data integrity when syncing between devices
+These specifications provide a comprehensive roadmap for implementing the requested features without requiring database expertise, as Firebase handles the complex security and storage aspects while providing a straightforward API for developers.

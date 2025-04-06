@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found - TrainLink</title>
+    <!-- Favicon -->
+    <link rel="icon" href="assets/images/Logo.png" type="image/png">
+    <link rel="apple-touch-icon" href="assets/images/Logo.png">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Styles -->
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <style>
+        /* Just some basic styling for the error page */
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        .error-container {
+            max-width: 600px;
+        }
+        h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 72px;
+            color: #4CAF50;
+            margin-bottom: 0;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 10px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 18px;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .redirect-message {
+            display: none;
+            margin: 20px 0;
+            font-style: italic;
+        }
+    </style>
+    <script>
+        // This script detects which page was requested and redirects to the correct one
+        document.addEventListener('DOMContentLoaded', function() {
+            // SPA route mapping
+            const routes = {
+                '/app': '/pages/app.html',
+                '/login': '/pages/login.html',
+                '/register': '/pages/register.html',
+                '/profile': '/pages/profile.html',
+                '/stats': '/pages/stats.html',
+                '/devices': '/pages/devices.html',
+                '/privacy': '/pages/privacy-policy.html',
+                '/terms': '/pages/terms-of-service.html',
+                '/shared-workout': '/pages/shared-workout.html'
+            };
+            
+            // Get the current path
+            const path = window.location.pathname;
+            
+            // Check if the path matches any of our SPA routes
+            for (const route in routes) {
+                if (path === route || path.startsWith(route + '/')) {
+                    // Show the redirect message
+                    document.getElementById('redirect-message').style.display = 'block';
+                    
+                    // Redirect to the correct page
+                    const targetRoute = routes[route];
+                    setTimeout(function() {
+                        window.location.href = targetRoute;
+                    }, 1000);
+                    return;
+                }
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="error-container">
+        <h1>404</h1>
+        <h2>PAGE NOT FOUND</h2>
+        
+        <p>THE PAGE YOU ARE LOOKING FOR DOESN'T EXIST OR HAS BEEN MOVED.</p>
+        <p>PLEASE CHECK THE URL OR NAVIGATE BACK TO THE MAIN SITE.</p>
+        
+        <p id="redirect-message" class="redirect-message">Redirecting you to the requested page...</p>
+        
+        <div class="buttons">
+            <a href="/" class="btn">HOME</a>
+            <a href="/pages/app.html" class="btn">DASHBOARD</a>
+            <a href="/pages/login.html" class="btn">LOGIN</a>
+            <a href="/pages/register.html" class="btn">REGISTER</a>
+        </div>
+    </div>
+</body>
+</html> 

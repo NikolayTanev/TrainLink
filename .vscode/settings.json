@@ -1,0 +1,53 @@
+{
+  "deno.enablePaths": [
+    "supabase/functions"
+  ],
+  "deno.lint": true,
+  "deno.unstable": [
+    "bare-node-builtins",
+    "byonm",
+    "sloppy-imports",
+    "unsafe-proto",
+    "webgpu",
+    "broadcast-channel",
+    "worker-options",
+    "cron",
+    "kv",
+    "ffi",
+    "fs",
+    "http",
+    "net"
+  ],
+  "[typescript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "liveServer.settings.file": "index.html",
+  "liveServer.settings.useWebExt": true,
+  "liveServer.settings.fullReload": true,
+  "liveServer.settings.wait": 100,
+  "liveServer.settings.mount": [["/", "./"]],
+  "liveServer.settings.useBrowserPreview": true,
+  "liveServer.settings.NoBrowser": false,
+  "liveServer.settings.AdvanceCustomBrowserCmdLine": "",
+  "liveServer.settings.root": "/",
+  "liveServer.settings.https": {
+    "enable": false,
+    "cert": "",
+    "key": "",
+    "passphrase": ""
+  },
+  "liveServer.settings.proxy": {
+    "enable": false,
+    "baseUri": "/",
+    "proxyUri": "http://localhost:3000/"
+  },
+  "liveServer.settings.donotShowInfoMsg": false,
+  "liveServer.settings.donotVerifyTags": false,
+  "liveServer.settings.host": "127.0.0.1",
+  "liveServer.settings.ignoreFiles": [
+    ".vscode/**",
+    "**/*.scss",
+    "**/*.sass",
+    "**/*.ts"
+  ]
+}
