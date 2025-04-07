@@ -8,9 +8,14 @@
     <script type="module">
         import { navigateTo } from './assets/js/utils/path-helper.js';
         
-        // Redirect to index.html in the pages directory
+        // Improved redirect logic to prevent loops
         document.addEventListener('DOMContentLoaded', function() {
-            navigateTo('index.html');
+            // Only redirect if we're on the exact domain root and not already in a redirect loop
+            const path = window.location.pathname;
+            if (path === '/' || path === '') {
+                // Directly navigate to the pages directory to avoid the redirect loop
+                window.location.href = 'pages/index.html';
+            }
         });
     </script>
     <style>

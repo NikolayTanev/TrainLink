@@ -5,10 +5,11 @@
  * It provides functions to determine proper paths and adjust links accordingly.
  */
 
-// Auto-detect environment instead of using a hard-coded flag
-// In development: URLs will have 'pages' in the path or end with .html
-// In production: URLs will be clean (e.g., /app instead of /pages/app.html)
-const isLocalDevelopment = window.location.href.includes('/pages/') || window.location.href.endsWith('.html');
+// Improved environment detection to prevent redirect loops
+// Check if we're in development based on hostname (not path)
+const isLocalDevelopment = window.location.hostname === 'localhost' || 
+                          window.location.hostname === '127.0.0.1' ||
+                          window.location.hostname.includes('.netlify.app');
 
 /**
  * Calculates a path to a target page based on the environment

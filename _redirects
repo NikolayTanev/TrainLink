@@ -1,3 +1,8 @@
+# Shared workout redirects
 /shared-workout/* /pages/shared-workout.html 200
 /shared-workout /pages/shared-workout.html 200
-/* /index.html 200 
+
+# Root redirect - make it explicit to prevent loops
+/ /pages/index.html 200
+
+# Don't redirect everything else to index.html - use Netlify redirects for specific routes 
